@@ -5,12 +5,11 @@
     <h1 align="center">GOREPO-CLI</h1>
 </p>
 
-
-<p style="text-align:center;">
+<p align="center">
     A CLI tool to manage golang monorepos.
 </p>
 
-<p style="text-align:center;">
+<p align="center">
     /!\ Not nearly a v1
 </p>
 
@@ -33,16 +32,36 @@
         - @templ
         - @nginx
         - @kafka
+        - @ghcicd
 - `gorepo remove mod` to remove a module from the monorepo
 - `gorepo list` to list all modules in the monorepo
 - `gorepo rename mod new_name` to rename a module
 - `gorepo use xxx install xxx` to install a dependency in a module
+- `gorepo use xxx lint` to install a dependency in a module
+- `gorepo use xxx run` to install a dependency in a module
+- ...
 - `gorepo use xxx special command from the template`
     - `gorepo use xxx add service`
     - `gorepo use xxx add endpoint`
 - `gorepo lint`
 - `gorepo fmt`
 - `gorepo test`
-- `gorepo build`
-- `gorepo start`
-- `gorepo dev`
+- `gorepo build` // with/without docker - push or not
+- `gorepo start` (call what was built) option `--watch` (runs dev, if docker), option `--no-docker` (runs dev, without docker)
+- `gorepo check` flag `--fix` - `gorepo build`
+- `gorepo tidy`
+- `gorepo tree` to display the tree of the monorepo
+- `gorepo version` 
+- `gorepo update` to update the CLI
+- `gorepo help` to display the help
+- `gorepo upgrade` to upgrade the packages to the latest version
+
+example of docker flows
+
+```bash
+gorepo docker build --module api
+gorepo docker push --module api --registry my-docker-registry
+gorepo docker deploy --module api --env production
+gorepo docker compose up --detach
+gorepo docker compose logs --follow
+```
