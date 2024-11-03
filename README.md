@@ -13,13 +13,22 @@
     /!\ Not nearly a v1
 </p>
 
+## Philosophy
+
+- The CLI should be super dumb to use and transparent regarding what it does - --verbose should log everything
+- The CLI would favorite flat structure but should be able to handle nested folders
+- Commands should be ran from anywhere within the monorepo (avoiding the use of cd or having many terminals)
+- No need to edit the go.work file, go.mod or gorepo.toml files manually
+- Deleting the monorepo files (gorepo.toml files and .gorepo) should be enough to remove the CLI
+- The CLI should be non intrusive and should not modify anything unless approved explicitely by the user
+
 ## Brainstorm commands
 
 - `gorepo init` to create a new monorepo
     - -> ask for the type of monorepo (workspace vs module rewrite)
     - -> ask vendor or not
     - -> generate go.work
-    - -> generate gorepo.yml
+    - -> generate gorepo.toml
     - -> generate .gitignore
     - -> generate docker-compose.yml (if user wants)
     - -> how many servers
