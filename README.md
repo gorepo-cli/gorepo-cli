@@ -1,6 +1,6 @@
 <p align="center">
     <picture>
-        <img style="margin-bottom:0;" width="130" src="./gorepo.png" alt="logo">
+        <img style="margin-bottom:0;" width="130" src="./doc/assets/gorepo.png" alt="logo">
     </picture>
     <h1 align="center">GOREPO-CLI</h1>
 </p>
