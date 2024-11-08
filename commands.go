@@ -25,8 +25,6 @@ func NewCommands(su SystemUtils, cfg Config, manager ConfigManager) *Commands {
 }
 
 func (cmd *Commands) Init(c *cli.Context) error {
-	cmd.SystemUtils.Logger.Info("Initializing a new monorepo...")
-
 	if exists := cmd.ConfigManager.RootConfigExists(); exists {
 		return errors.New("Monorepo already exists at " + cmd.Config.Runtime.ROOT)
 	}

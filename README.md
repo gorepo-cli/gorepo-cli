@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-    A CLI tool to manage golang monorepos.
+    A CLI to manage go monorepos.
 </p>
 
 <p align="center">
@@ -15,21 +15,56 @@
 
 ## Philosophy
 
-- The CLI should be dumb to use. The dumber the better
-- The CLI should allow running CI/CD related commands at the root (test, lint, build, etc.)
+- The CLI should be dumb to use. The dumber the better.
+- The CLI should allow running all CI/CD commands for all modules at the root (test, lint, build, etc.)
 - The CLI should favorite a flat monorepo structure, but should be able to handle nested folders
 - The CLI should be non-intrusive and should not modify anything unless approved explicitely by the user
-- The CLI could be controlling docker, git and git hooks for the user (must be defined)
+- The CLI should allow the user to add modules from templates, and add custom templates
+- The CLI could be controlling docker, git and git hooks for the user
+- The CLI could also handle incremental builds and deployments, given the user configures a storage for artifacts
 
-## Dependencies
+## Pre-requisites
 
-To use the CLI, one should have go installed.
-In the future it could also depend on git and docker.
+To use the CLI, you must have go installed since it runs go commands.
 
-## Brainstorm commands
+## Getting started as a dev
+
+- Run `make build` to create bin/gorepo
+- Add the bin folder to your PATH
+- As a result, you can now run `gorepo` from anywhere
+
+### Example on Fedora:
+```bash
+vim ~/.bashrc
+
+# add this:
+export PATH="$PATH:/home/my_name/Repositories/gorepo-cli/bin"
+
+# refresh the terminal
+source ~/.bashrc
+```
+
+## Documentation
+
+This documentation is maintained as we go. It only contains information that 
+is relevant to the actual version.
+
+### To create a new monorepo at the current working directory
+
+```bash
+# Navigate to the root of your monorepo and run:
+> gorepo init
+```
+
+This will create a work.toml file at the root, and a go.work file if one does not exist.
+Currently, go workspaces are the only strategy available to build a monorepo with the CLI.
+
+Note you can not nest monorepos.
+
+## Brainstorm for future commands
 
 - `gorepo init` to create a new monorepo
-    - -> ask for the type of monorepo (workspace vs module rewrite)
+    - -> ask for the type of monorepo (workspace vs rewrite)
     - -> ask vendor or not
     - -> generate go.work
     - -> generate gorepo.toml
