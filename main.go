@@ -1,18 +1,27 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/urfave/cli/v2"
 	"log"
 	"os"
 	"path/filepath"
 )
 
+var (
+	fatal   = color.New(color.FgRed).SprintFunc()     // Red for errors
+	warning = color.New(color.FgYellow).SprintFunc()  // Yellow for warnings
+	verbose = color.New(color.FgHiBlack).SprintFunc() // Gray for general messages
+	success = color.New(color.FgGreen).SprintFunc()   // Green for success messages
+	info    = color.New(color.FgBlue).SprintFunc()    // Blue for info messages
+)
+
 func main() {
 	env, err := NewEnv()
 	if err != nil {
-		log.Fatal(err)
-		return
+		log.Fatal(fatal(err))
 	}
 	commands := NewCommands(env)
 	app := &cli.App{
@@ -39,7 +48,7 @@ func main() {
 	}
 
 	if err := app.Run(os.Args); err != nil {
-		log.Fatal(err)
+		log.Fatal(fatal(err))
 	}
 }
 
@@ -58,7 +67,11 @@ func NewCommands(env Env) *Commands {
 }
 
 func (commands *Commands) Init(c *cli.Context) error {
-	fmt.Println("Initializing a new monorepo...", commands.Env)
+	fmt.Println(verbose("Initializing a new monorepo..."))
+	if exists := DoesWorkspaceExist(commands.Env); exists {
+		errMsg := "Monorepo already exists at " + commands.Env.ROOT
+		return errors.New(errMsg)
+	}
 	return nil
 }
 
@@ -120,6 +133,14 @@ type WorkConfig struct {
 	Version  string
 	Strategy string // workspace / rewrites (unsupported yet)
 	Vendor   bool   // vendor or not
+}
+
+func DoesWorkspaceExist(env Env) bool {
+	filePath := filepath.Join(env.ROOT, env.MonorepoFileName)
+	if _, err := os.Stat(filePath); err == nil {
+		return true
+	}
+	return false
 }
 
 // configuration from the module.toml file
