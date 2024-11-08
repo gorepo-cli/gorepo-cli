@@ -1,19 +1,23 @@
 package main
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/urfave/cli/v2"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 var (
 	fatal   = color.New(color.FgRed).SprintFunc()     // Red for errors
 	warning = color.New(color.FgYellow).SprintFunc()  // Yellow for warnings
 	verbose = color.New(color.FgHiBlack).SprintFunc() // Gray for general messages
+	comment = color.New(color.FgCyan).SprintFunc()    // Cyan for comments
 	success = color.New(color.FgGreen).SprintFunc()   // Green for success messages
 	info    = color.New(color.FgBlue).SprintFunc()    // Blue for info messages
 )
@@ -30,7 +34,7 @@ func main() {
 		Commands: []*cli.Command{
 			{
 				Name:   "init",
-				Usage:  "Initialize a new monorepo",
+				Usage:  "Initialize a new monorepo at the working directory",
 				Action: commands.Init,
 			},
 			//{
@@ -68,10 +72,64 @@ func NewCommands(env Env) *Commands {
 
 func (commands *Commands) Init(c *cli.Context) error {
 	fmt.Println(verbose("Initializing a new monorepo..."))
+
+	// Check monorepo config existence
 	if exists := DoesWorkspaceExist(commands.Env); exists {
 		errMsg := "Monorepo already exists at " + commands.Env.ROOT
 		return errors.New(errMsg)
 	}
+
+	config := WorkConfig{
+		Name:     c.Args().Get(0),
+		Version:  "0.1.0",
+		Strategy: "workspace",
+		Vendor:   true,
+	}
+
+	// ask name
+	if config.Name == "" {
+		reader := bufio.NewReader(os.Stdin)
+		base := filepath.Base(commands.Env.ROOT)
+		fmt.Print("Enter the monorepo name: " + comment(fmt.Sprintf("default: ("+base+")")) + " ")
+		response, err := reader.ReadString('\n')
+		if err != nil {
+			return fmt.Errorf("failed to read input: %w", err)
+		}
+		response = strings.TrimSpace(response)
+		if response == "" {
+			response = base
+		}
+		config.Name = response
+	}
+
+	// ask strategy
+	fmt.Println(comment("Using go workspace strategy by default (no other option for now)"))
+
+	// ask if should vendor
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Do you want to vendor dependencies? (y/n) " + comment("default: (y)") + " ")
+	response, err := reader.ReadString('\n')
+	if err != nil {
+		return fmt.Errorf("failed to read input: %w", err)
+	}
+	config.Vendor = strings.TrimSpace(response) == "y"
+
+	// Check go workspace existence
+	if config.Strategy == "workspace" {
+		if exists := DoesGoWorkspaceExist(commands.Env); !exists {
+			RunGoCommand(commands.Env.ROOT, "work", "init")
+		}
+	} else if config.Strategy == "rewrite" {
+		return errors.New("Unsupported yet")
+	} else {
+		return errors.New("Invalid strategy")
+	}
+
+	// Create monorepo config
+
+	// check existence of modules folder (go.mod) to sanitize everything (create module.toml and make sure they are in the workspace)
+
+	fmt.Println("ended init")
 	return nil
 }
 
@@ -143,7 +201,29 @@ func DoesWorkspaceExist(env Env) bool {
 	return false
 }
 
+func DoesGoWorkspaceExist(env Env) bool {
+	filePath := filepath.Join(env.ROOT, "go.work")
+	if _, err := os.Stat(filePath); err == nil {
+		return true
+	}
+	return false
+}
+
 // configuration from the module.toml file
 type ModuleConfig struct {
 	Name string
+}
+
+func RunGoCommand(dir string, args ...string) error {
+	cmd := exec.Command("go", args...)
+
+	cmd.Dir = dir
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("failed to run command: %w\nOutput: %s", err, string(output))
+	}
+
+	fmt.Printf("Command output: %s\n", string(output))
+	return nil
 }
