@@ -15,12 +15,16 @@
 
 ## Philosophy
 
-- The CLI should be super dumb to use and transparent regarding what it does - --verbose should log everything
-- The CLI would favorite flat structure but should be able to handle nested folders
-- Commands should be ran from anywhere within the monorepo (avoiding the use of cd or having many terminals)
-- No need to edit the go.work file, go.mod or gorepo.toml files manually
-- Deleting the monorepo files (gorepo.toml files and .gorepo) should be enough to remove the CLI
-- The CLI should be non intrusive and should not modify anything unless approved explicitely by the user
+- The CLI should be dumb to use. The dumber the better
+- The CLI should allow running CI/CD related commands at the root (test, lint, build, etc.)
+- The CLI should favorite a flat monorepo structure, but should be able to handle nested folders
+- The CLI should be non-intrusive and should not modify anything unless approved explicitely by the user
+- The CLI could be controlling docker, git and git hooks for the user (must be defined)
+
+## Dependencies
+
+To use the CLI, one should have go installed.
+In the future it could also depend on git and docker.
 
 ## Brainstorm commands
 
@@ -74,3 +78,51 @@ gorepo docker deploy --module api --env production
 gorepo docker compose up --detach
 gorepo docker compose logs --follow
 ```
+
+--verbose should log everything
+
+## Toml example
+
+work.toml
+```toml
+[monorepo]
+name = "MyGoMonorepo"
+version = "1.0"
+monorepo_strategy = "workspace"
+vendor = true/false
+
+[scripts]
+```
+
+module.toml
+```toml
+[module]
+name = "api"
+
+[template]
+name = "@echo"
+......
+
+[commands]
+     run = "go run cmd/service-1/main.go"
+     lint = "golangci-lint run"
+     test = "go test ./..."
+```
+
+## 1
+
+- `grpo version`
+- `grpo init` -> init work.tml, go.work, vendor, gitignore (no git, no docker, no modules)
+- `grpo add name-or-path`
+- `grpo list`
+
+## 2
+
+- `grpo lint`
+- `grpo fmt`
+- `grpo test`
+
+## 5
+
+- `grpo remove name-or-path`
+- `grpo rename name-or-path new-name`
