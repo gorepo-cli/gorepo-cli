@@ -1,6 +1,6 @@
 <p align="center">
     <picture>
-        <img style="margin-bottom:0;" width="130" src="./doc/assets/gorepo.png" alt="logo">
+        <img style="margin-bottom:0;" width="130" src="./assets/gorepo.png" alt="logo">
     </picture>
     <h1 align="center">GOREPO-CLI</h1>
 </p>
@@ -12,10 +12,10 @@
 ## Philosophy
 
 - The CLI should be dumb to use. The dumber the better.
+- The CLI should allow running all commands from anywhere in the monorepo
 - The CLI should allow running all CI/CD commands for all modules at once (test, lint, build, etc.)
-- The CLI should allow all commands to be be ran from anywhere in the monorepo 
 - The CLI should favorite a flat monorepo structure, but should be able to handle nested folders
-- The CLI should be non-intrusive and should not modify anything unless approved explicitely by the user
+- The CLI should be non-intrusive and should not modify anything unless approved explicitly by the user
 - The CLI should allow the user to add modules from templates, and add custom templates
 - The CLI could be controlling docker, git and git hooks for the user
 - The CLI could also handle incremental builds and deployments, given the user configures a storage
@@ -58,6 +58,9 @@ is relevant to the actual version.
 ```bash
 # Navigate to the root of your monorepo and run:
 > gorepo init
+
+# Or define a name in the command
+> gorepo init repo_name
 ```
 
 This will create a work.toml file at the root, and a go.work file if one does not exist.

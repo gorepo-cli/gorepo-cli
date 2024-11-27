@@ -2,3 +2,4 @@ work.toml
 module.toml
 bin
 go.work
+@templates

@@ -4,6 +4,7 @@ import (
 	"github.com/pelletier/go-toml/v2"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type RootConfig struct {
@@ -14,7 +15,7 @@ type RootConfig struct {
 }
 
 type ModuleConfig struct {
-	Name string
+	Name string // the module name is the folder name with no spaces
 }
 
 type ConfigManager struct {
@@ -38,6 +39,14 @@ func (c *ConfigManager) RootConfigExists() bool {
 }
 
 func (c *ConfigManager) LoadRootConfig() (cfg RootConfig, err error) {
+	file, err := c.SystemUtils.Fs.ReadFile(filepath.Join(c.Config.Runtime.ROOT, c.Config.Static.RootFileName))
+	if err != nil {
+		return cfg, err
+	}
+	err = toml.Unmarshal(file, &cfg)
+	if err != nil {
+		return cfg, err
+	}
 	return cfg, nil
 }
 
@@ -58,11 +67,85 @@ func (c *ConfigManager) GoWorkspaceExists() bool {
 	return false
 }
 
-func (c *ConfigManager) LoadModuleConfig(mod string) (cfg ModuleConfig, err error) {
+// loop to check if folder exists
+func (c *ConfigManager) ModuleFolderExists(name string) bool {
+	currentPath := c.Config.Runtime.ROOT
+
+	found := false
+
+	err := filepath.Walk(currentPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() && info.Name() == name {
+			found = true
+			return filepath.SkipDir
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		c.SystemUtils.Logger.Warning(err.Error())
+		return false
+	}
+
+	return found
+}
+
+func (c *ConfigManager) GetModules() (modules []struct {
+	RelativePath string
+	ModuleConfig ModuleConfig
+}, err error) {
+	currentPath := c.Config.Runtime.ROOT
+
+	err = filepath.Walk(currentPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			exists := c.SystemUtils.Fs.FileExists(filepath.Join(path, c.Config.Static.ModuleFileName))
+			if exists {
+				moduleConfig, err := c.LoadModuleConfig(path)
+				if err != nil {
+					return err
+				}
+				relativePath, err := filepath.Rel(c.Config.Runtime.ROOT, path)
+				modules = append(modules, struct {
+					RelativePath string
+					ModuleConfig ModuleConfig
+				}{RelativePath: relativePath, ModuleConfig: moduleConfig})
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		c.SystemUtils.Logger.Warning(err.Error())
+		return modules, err
+	}
+
+	return modules, nil
+}
+
+func (c *ConfigManager) LoadModuleConfig(path string) (cfg ModuleConfig, err error) {
+	file, err := c.SystemUtils.Fs.ReadFile(filepath.Join(path, c.Config.Static.ModuleFileName))
+	if err != nil {
+		return cfg, err
+	}
+	err = toml.Unmarshal(file, &cfg)
+	if err != nil {
+		return cfg, err
+	}
+	folderName := filepath.Base(path)
+	cfg.Name = strings.ReplaceAll(folderName, " ", "")
 	return cfg, nil
 }
 
-func (c *ConfigManager) WriteModuleConfig(modConfig string) (err error) {
+func (c *ConfigManager) WriteModuleConfig(modConfig ModuleConfig, path, name string) (err error) {
 	//configStr, err := toml.Marshal(modConfig)
 	//if err != nil {
 	//	return err

@@ -56,9 +56,8 @@ var (
 	fatal   = color.New(color.FgRed).SprintFunc()
 	warning = color.New(color.FgYellow).SprintFunc()
 	verbose = color.New(color.FgHiBlack).SprintFunc()
-	comment = color.New(color.FgCyan).SprintFunc()
 	success = color.New(color.FgGreen).SprintFunc()
-	info    = color.New(color.FgBlue).SprintFunc()
+	info    = color.New(color.FgCyan).SprintFunc()
 )
 
 type Logger struct {
@@ -77,14 +76,14 @@ func (su *Logger) Verbose(msg string) {
 	su.Logger.Println(verbose(msg))
 }
 
-func (su *Logger) Comment(msg string) {
-	su.Logger.Println(comment(msg))
-}
-
 func (su *Logger) Success(msg string) {
 	su.Logger.Println(success(msg))
 }
 
 func (su *Logger) Info(msg string) {
 	su.Logger.Println(info(msg))
+}
+
+func (su *Logger) Default(msg string) {
+	su.Logger.Println(msg)
 }
