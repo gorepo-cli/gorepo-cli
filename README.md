@@ -1,9 +1,9 @@
-<p align="center">
+<div align="center">
     <picture>
         <img style="margin-bottom:0;" width="130" src="./assets/gorepo.png" alt="logo">
     </picture>
-    <h1 align="center">GOREPO</h1>
-</p>
+    <p align="center" style="font-size:30px;font-weight:bolder">GOREPO</p>
+</div>
 
 <p align="center">
     A CLI to manage Go monorepos.
