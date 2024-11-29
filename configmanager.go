@@ -8,14 +8,16 @@ import (
 )
 
 type RootConfig struct {
-	Name     string
-	Version  string
-	Strategy string // workspace / rewrites (unsupported yet)
-	Vendor   bool   // vendor or not
+	Name     string            `toml:"name"`
+	Version  string            `toml:"version"`
+	Strategy string            `toml:"strategy"` // workspace / rewrites (unsupported yet)
+	Vendor   bool              `toml:"vendor"`   // vendor or not
+	Scripts  map[string]string `toml:"scripts"`
 }
 
 type ModuleConfig struct {
-	Name string // the module name is the folder name with no spaces
+	Name    string            `toml:"name"` // the module name is the folder name with no spaces
+	Scripts map[string]string `toml:"scripts"`
 }
 
 type ConfigManager struct {

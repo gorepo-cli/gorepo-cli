@@ -107,6 +107,53 @@ func (cmd *Commands) List(c *cli.Context) error {
 	return nil
 }
 
+func (cmd *Commands) Run(c *cli.Context) error {
+	if exists := cmd.ConfigManager.RootConfigExists(); !exists {
+		return errors.New("monorepo not found at " + cmd.Config.Runtime.ROOT)
+	}
+
+	// run all <script_name> or run <script_name>
+	// run some <script_name> <module_name> <module_name> <module_name>
+	// run root <script_name>
+
+	if c.Args().Len() < 1 {
+		return errors.New("no command provided, usage: gorepo run 'command'")
+	}
+
+	command := c.Args().Get(0)
+
+	modules, err := cmd.ConfigManager.GetModules()
+	if err != nil {
+		return err
+	}
+
+	// check all modules have the command
+	// todo: flag to bypass this check (--allow-missing)
+	var modulesWithoutScript []string
+	for _, module := range modules {
+		if _, ok := module.ModuleConfig.Scripts[command]; !ok {
+			modulesWithoutScript = append(modulesWithoutScript, module.ModuleConfig.Name)
+		}
+	}
+	if len(modulesWithoutScript) > 0 {
+		return errors.New("following modules are missing the command '" + command + "' :" + strings.Join(modulesWithoutScript, ", "))
+	}
+
+	// execute them
+	for _, module := range modules {
+		cmd.SystemUtils.Logger.Info("running command in " + module.ModuleConfig.Name)
+		path := filepath.Join(cmd.Config.Runtime.ROOT, module.RelativePath)
+		for _, script := range module.ModuleConfig.Scripts {
+			err := cmd.SystemUtils.Exec.BashCommand(path, script)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 //func (cmd *Commands) Add(c *cli.Context) error {
 //	//rootConfig, err := cmd.ConfigManager.LoadRootConfig()
 //	//if err != nil {
@@ -196,6 +243,12 @@ func (cmd *Commands) Debug(c *cli.Context) error {
 			cmd.SystemUtils.Logger.Info("MODULE " + module.ModuleConfig.Name)
 			fmt.Println("MODULE_NAME........ " + module.ModuleConfig.Name)
 			fmt.Println("MODULE_PATH........ " + module.RelativePath)
+			if len(module.ModuleConfig.Scripts) > 0 {
+				fmt.Println("COMMANDS........")
+				for k, v := range module.ModuleConfig.Scripts {
+					fmt.Println("  " + k + " -> " + v)
+				}
+			}
 		}
 	}
 

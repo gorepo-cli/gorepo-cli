@@ -52,6 +52,15 @@ func (x *Exec) GoCommand(dir string, args ...string) (err error) {
 	return nil
 }
 
+func (x *Exec) BashCommand(absolutePath, script string) (err error) {
+	cmd := exec.Command("/bin/bash", "-c", script)
+	_, err = cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("failed to run command: %w", err)
+	}
+	return nil
+}
+
 var (
 	fatal   = color.New(color.FgRed).SprintFunc()
 	warning = color.New(color.FgYellow).SprintFunc()

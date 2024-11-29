@@ -28,27 +28,21 @@ func main() {
 				Usage:  "List all modules in the monorepo",
 				Action: commands.List,
 			},
-			//{
-			//	Name:   "add",
-			//	Usage:  "Add a new module to the monorepo",
-			//	Action: commands.Add,
-			//	Flags: []cli.Flag{
-			//		&cli.BoolFlag{
-			//			Name:  "verbose",
-			//			Usage: "Enable verbose output",
-			//		},
-			//		&cli.StringFlag{
-			//			Name:  "template",
-			//			Usage: "Choose a template (not implemented)",
-			//		},
-			//	},
-			//},
-			//{
-			//	Name:   "run",
-			//	Usage:  "Run a command in all modules",
-			//	Action: commands.Run,
-			//},
-			//{}, // sanitize / lint / health / check
+			{
+				Name:   "run",
+				Usage:  "Run a command in a given scope (all modules, some modules, at root)",
+				Action: commands.Run,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "target",
+						Usage: "NOT IMPLEMENTED Target root or specific modules (comma separated)",
+					},
+					&cli.BoolFlag{
+						Name:  "dry-run",
+						Usage: "NOT IMPLEMENTED Print the commands that would be executed",
+					},
+				},
+			},
 			{
 				Name:   "debug",
 				Usage:  "Gives information about the configuration",

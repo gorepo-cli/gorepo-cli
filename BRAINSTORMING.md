@@ -104,3 +104,22 @@ name = "@echo"
 ```
 ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.@!#$%^&()[]{}'+,;=~
 ```
+
+
+
+//{
+//	Name:   "add",
+//	Usage:  "Add a new module to the monorepo",
+//	Action: commands.Add,
+//	Flags: []cli.Flag{
+//		&cli.BoolFlag{
+//			Name:  "verbose",
+//			Usage: "Enable verbose output",
+//		},
+//		&cli.StringFlag{
+//			Name:  "template",
+//			Usage: "Choose a template (not implemented)",
+//		},
+//	},
+//},
+//{}, // sanitize / lint / health / check
