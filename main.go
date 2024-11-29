@@ -33,16 +33,16 @@ func main() {
 				Usage:  "Run a command in a given scope (all modules, some modules, at root)",
 				Action: commands.Run,
 				Flags: []cli.Flag{
-					//&cli.StringFlag{
-					//	Name:  "target",
-					//	Value: "all",
-					//	Usage: "NOT IMPLEMENTED Target root or specific modules (comma separated)",
-					//},
-					//&cli.BoolFlag{
-					//	Name:  "dry-run",
-					//  Value: false,
-					//	Usage: "NOT IMPLEMENTED Print the commands that would be executed",
-					//},
+					&cli.StringFlag{
+						Name:  "target",
+						Value: "all",
+						Usage: "NOT IMPLEMENTED Target root or specific modules (comma separated)",
+					},
+					&cli.BoolFlag{
+						Name:  "dry-run",
+						Value: false,
+						Usage: "NOT IMPLEMENTED Print the commands that would be executed",
+					},
 					&cli.BoolFlag{
 						Name:  "allow-missing",
 						Value: false,

@@ -114,6 +114,15 @@ func (cmd *Commands) List(c *cli.Context) error {
 	return nil
 }
 
+func contains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}
+
 func (cmd *Commands) Run(c *cli.Context) error {
 	if exists := cmd.ConfigManager.RootConfigExists(); !exists {
 		return errors.New("monorepo not found at " + cmd.Config.Runtime.ROOT)
@@ -129,89 +138,73 @@ func (cmd *Commands) Run(c *cli.Context) error {
 
 	allowMissing := c.Bool("allow-missing")
 	cmd.SystemUtils.Logger.Verbose("value for flag allowMissing: " + strconv.FormatBool(allowMissing))
-	//dryRun := c.Bool("dry-run")
-	//targets := strings.Split(c.String("target"), ",")
-
-	modules, err := cmd.ConfigManager.GetModules()
-	if err != nil {
-		return err
-	}
-
-	// check all modules have the script
-	cmd.SystemUtils.Logger.Verbose("checking if all modules have the script")
-	var modulesWithoutScript []string
-	for _, module := range modules {
-		if _, ok := module.ModuleConfig.Scripts[scriptName]; !ok || module.ModuleConfig.Scripts[scriptName] == "" {
-			modulesWithoutScript = append(modulesWithoutScript, module.ModuleConfig.Name)
+	dryRun := c.Bool("dry-run")
+	cmd.SystemUtils.Logger.Verbose("value for flag dryRun:       " + strconv.FormatBool(dryRun))
+	targets := strings.Split(c.String("target"), ",")
+	cmd.SystemUtils.Logger.Verbose("value for flag target:       " + strings.Join(targets, ","))
+	for _, target := range targets {
+		if target == "root" && len(targets) > 1 {
+			return errors.New("cannot run script in root and in modules at the same time, you're being too fancy")
 		}
 	}
-	if len(modulesWithoutScript) == len(modules) {
-		return errors.New("not running script, because it is missing in all modules")
-	} else if len(modulesWithoutScript) > 0 && !allowMissing {
-		return errors.New("not running script, because it is missing in following modules '" + scriptName + "' :" + strings.Join(modulesWithoutScript, ", "))
-	} else if len(modulesWithoutScript) > 0 && allowMissing {
-		cmd.SystemUtils.Logger.Verbose("script is missing in following modules (but flag allowMissing was passed) '" + scriptName + "' :" + strings.Join(modulesWithoutScript, ", "))
+
+	if targets[0] == "root" {
+		cmd.SystemUtils.Logger.Verbose("running script in root not supported yet")
 	} else {
-		cmd.SystemUtils.Logger.Verbose("all modules have the script")
-	}
-
-	// execute them
-	for _, module := range modules {
-		path := filepath.Join(cmd.Config.Runtime.ROOT, module.RelativePath)
-		script := module.ModuleConfig.Scripts[scriptName]
-		if script == "" {
-			cmd.SystemUtils.Logger.Info("script is empty, skipping")
-			continue
-		}
-		cmd.SystemUtils.Logger.Info("running script " + scriptName + " in module " + module.ModuleConfig.Name)
-		if err := cmd.SystemUtils.Exec.BashCommand(path, script); err != nil {
+		allModules, err := cmd.ConfigManager.GetModules()
+		if err != nil {
 			return err
+		}
+
+		var modules []struct {
+			RelativePath string
+			ModuleConfig ModuleConfig
+		}
+
+		for _, module := range allModules {
+			if targets[0] == "all" || contains(targets, module.ModuleConfig.Name) {
+				modules = append(modules, module)
+			}
+		}
+
+		// check all modules have the script
+		cmd.SystemUtils.Logger.Verbose("checking if all modules have the script")
+		var modulesWithoutScript []string
+		for _, module := range modules {
+			if _, ok := module.ModuleConfig.Scripts[scriptName]; !ok || module.ModuleConfig.Scripts[scriptName] == "" {
+				modulesWithoutScript = append(modulesWithoutScript, module.ModuleConfig.Name)
+			}
+		}
+		if len(modulesWithoutScript) == len(modules) {
+			return errors.New("not running script, because it is missing in all modules")
+		} else if len(modulesWithoutScript) > 0 && !allowMissing {
+			return errors.New("not running script, because it is missing in following modules '" + scriptName + "' :" + strings.Join(modulesWithoutScript, ", "))
+		} else if len(modulesWithoutScript) > 0 && allowMissing {
+			cmd.SystemUtils.Logger.Verbose("script is missing in following modules (but flag allowMissing was passed) '" + scriptName + "' :" + strings.Join(modulesWithoutScript, ", "))
+		} else {
+			cmd.SystemUtils.Logger.Verbose("all modules have the script")
+		}
+
+		// execute them
+		for _, module := range modules {
+			path := filepath.Join(cmd.Config.Runtime.ROOT, module.RelativePath)
+			script := module.ModuleConfig.Scripts[scriptName]
+			if script == "" {
+				cmd.SystemUtils.Logger.Info("script is empty, skipping")
+				continue
+			}
+			cmd.SystemUtils.Logger.Info("running script " + scriptName + " in module " + module.ModuleConfig.Name)
+			if dryRun {
+				continue
+			}
+			if err := cmd.SystemUtils.Exec.BashCommand(path, script); err != nil {
+				return err
+			}
 		}
 	}
 
 	return nil
 }
-
-//func (cmd *Commands) Add(c *cli.Context) error {
-//	//rootConfig, err := cmd.ConfigManager.LoadRootConfig()
-//	//if err != nil {
-//	//	return err
-//	//}
-//
-//	var path string
-//	var name string
-//	pathAndName := c.Args().Get(0)
-//	if strings.Contains("/", pathAndName) {
-//		path = filepath.Dir(pathAndName)
-//		name = filepath.Base(pathAndName)
-//	} else {
-//		name = pathAndName
-//	}
-//
-//	if name == "" {
-//		return errors.New("module name is required, use the syntax 'gorepo add module_name'")
-//	}
-//
-//	if exists := cmd.ConfigManager.ModuleFolderExists(name); exists == true {
-//		// todo: in the future we could check if it has a module.toml file and create the toml over there
-//		return errors.New("module with the name " + name + " already exists")
-//	}
-//
-//	// fmt.Println(rootConfig)
-//
-//	moduleConfig := ModuleConfig{
-//		Name: name,
-//	}
-//
-//	err := cmd.ConfigManager.WriteModuleConfig(moduleConfig, path, name)
-//	if err != nil {
-//		return err
-//	}
-//
-//	// todo: duplicate module
-//
-//	return nil
-//}
 
 func (cmd *Commands) Debug(c *cli.Context) error {
 	cmd.SystemUtils.Logger.Info("===================")

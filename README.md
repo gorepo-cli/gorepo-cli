@@ -43,7 +43,7 @@ Gorepo is not yet available on any package manager. You will need to build it yo
 - Change code, build, test from anywhere, repeat
 
 ### Example on Linux:
-```bash
+```
 vim ~/.bashrc
 
 # add this:
@@ -70,13 +70,9 @@ Creates a monorepo at the current work directory
 
 #### Usage
 
-```bash
-gorepo init [name]
 ```
-
-#### Parameters
-
-- `name` (optional): the name of the monorepo - defaults to the current directory name
+gorepo init
+```
 
 #### Behaviour
 
@@ -92,7 +88,7 @@ Lists all modules in the monorepo
 
 #### Usage
 
-```bash
+```
 gorepo list
 ```
 
@@ -108,15 +104,15 @@ Runs a script from a specified context
 
 #### Usage
 
-```bash
-gorepo run [script] [--target] [--dry-run] [--allow-missing]
+```
+gorepo run [--target] [--dry-run] [--allow-missing] [script]
 ```
 
 #### Parameters
 
 - `script`: the name of the script to run
-- `--target` NOT IMPLEMENTED (optional): the name of the comma-separated module(s) to run the script in, examples: `--target=root`, `--target=mod1,mod2`
-- `--dry-run` NOT IMPLEMENTED (optional): prints the command that would be run without actually running it
+- `--target` (optional): the name of the comma-separated module(s) to run the script in, examples: `--target=root`, `--target=mod1,mod2`
+- `--dry-run` (optional): prints the command that would be run without actually running it
 - `--allow-missing` (optional): allows the script to run even if some of the targets does not have the script
 
 #### Behaviour
