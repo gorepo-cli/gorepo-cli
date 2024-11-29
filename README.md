@@ -120,3 +120,4 @@ gorepo run [--target] [--dry-run] [--allow-missing] [script]
 This command runs all the scripts (bash scripts) defined in `work.toml` and `module.toml` files that are targeted.
 By default, it will not run if one of the targeted module is missing the script.
 Note it will run all or nothing. If one fails, it will not revert the operations that already ran.
+
