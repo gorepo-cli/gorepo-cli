@@ -1,4 +1,12 @@
 
+
+### Following statements are for future work:
+
+- The CLI should allow the user to add modules from templates
+- The users should be able to create templates
+- The creator of a template should be allowed to define template-scripts
+- The CLI could also handle incremental builds, given the user configures a storage
+
 ## Brainstorm for future commands
 
 - `gorepo init` to create a new monorepo
