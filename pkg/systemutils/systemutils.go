@@ -1,4 +1,4 @@
-package main
+package systemutils
 
 import (
 	"fmt"
@@ -99,6 +99,10 @@ func (su *Logger) Success(msg string) {
 
 func (su *Logger) Info(msg string) {
 	su.Logger.Println(info(msg))
+}
+
+func (su *Logger) ApplyInfoColor(msg string) string {
+	return info(msg)
 }
 
 func (su *Logger) Default(msg string) {

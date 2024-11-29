@@ -18,7 +18,7 @@ The CLI should:
 - allow both flat and nested structures (but common, make it flat, as flat as the earth)
 - be transparent to the user regarding what it does behind the hood
 
-See more future philosophy in BRAINSTORMING.md
+See more future philosophy in ROADMAP.md
 
 # Disclaimer
 - This is not nearly a v1
@@ -57,7 +57,7 @@ todo
 # Reference
 
 The reference documentation contains information that 
-is relevant to the actual commited version. Future development should be in BRAINSTORMING.md
+is relevant to the actual commited version. Future development should be in ROADMAP.md
 
 ## gorepo init
 

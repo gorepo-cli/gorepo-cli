@@ -1,7 +1,8 @@
-package main
+package config
 
 import (
 	"github.com/pelletier/go-toml/v2"
+	"gorepo-cli/pkg/systemutils"
 	"os"
 	"path/filepath"
 	"strings"
@@ -21,11 +22,11 @@ type ModuleConfig struct {
 }
 
 type ConfigManager struct {
-	SystemUtils SystemUtils
+	SystemUtils systemutils.SystemUtils
 	Config      Config
 }
 
-func NewConfigManager(su SystemUtils, cfg Config) ConfigManager {
+func NewConfigManager(su systemutils.SystemUtils, cfg Config) ConfigManager {
 	return ConfigManager{
 		SystemUtils: su,
 		Config:      cfg,

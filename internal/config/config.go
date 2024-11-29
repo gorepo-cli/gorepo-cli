@@ -1,7 +1,8 @@
-package main
+package config
 
 import (
 	"fmt"
+	"gorepo-cli/pkg/systemutils"
 	"os"
 	"path/filepath"
 )
@@ -22,7 +23,7 @@ type Static struct {
 	ModuleFileName string // File name to identify a module
 }
 
-func NewConfig(su SystemUtils) (cfg Config, err error) {
+func NewConfig(su systemutils.SystemUtils) (cfg Config, err error) {
 	cfg.Static = Static{
 		MaxRecursion:   7,
 		RootFileName:   "work.toml",
@@ -42,7 +43,7 @@ func NewConfig(su SystemUtils) (cfg Config, err error) {
 	return cfg, nil
 }
 
-func GetRoot(cfg Config, su SystemUtils) (root string, err error) {
+func GetRoot(cfg Config, su systemutils.SystemUtils) (root string, err error) {
 	currentDir := cfg.Runtime.WD
 	if currentDir == "" {
 		return "", fmt.Errorf("empty_wd")
