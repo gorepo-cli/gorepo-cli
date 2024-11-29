@@ -32,6 +32,7 @@
 ## Pre-requisites
 
 To use the CLI, you must have go installed since it runs go commands.
+In order to build the project, you need git (used to inject the version).
 
 ## Getting started
 

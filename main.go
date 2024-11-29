@@ -51,6 +51,11 @@ func main() {
 				},
 			},
 			{
+				Name:   "version",
+				Usage:  "Print the version of the monorepo",
+				Action: commands.Version,
+			},
+			{
 				Name:   "debug",
 				Usage:  "Gives information about the configuration",
 				Action: commands.Debug,

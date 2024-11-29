@@ -1,2 +1,4 @@
+VERSION := $(shell git describe --tags)
+
 build:
-	go build -o bin/gorepo .
+	go build -ldflags="-X 'main.version=$(VERSION)'" -o bin/gorepo .

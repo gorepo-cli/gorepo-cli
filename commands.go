@@ -206,6 +206,13 @@ func (cmd *Commands) Run(c *cli.Context) error {
 	return nil
 }
 
+var version = "dev"
+
+func (cmd *Commands) Version(c *cli.Context) error {
+	cmd.SystemUtils.Logger.Default(version)
+	return nil
+}
+
 func (cmd *Commands) Debug(c *cli.Context) error {
 	cmd.SystemUtils.Logger.Info("===================")
 	cmd.SystemUtils.Logger.Info("RUNTIME_CONFIG")
