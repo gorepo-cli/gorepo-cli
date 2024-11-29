@@ -34,7 +34,7 @@ func main() {
 				Action: commands.Run,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:  "targets",
+						Name:  "target",
 						Usage: "NOT IMPLEMENTED Target root or specific modules (comma separated)",
 					},
 					&cli.BoolFlag{
