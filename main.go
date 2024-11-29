@@ -15,7 +15,7 @@ func main() {
 	cm := NewConfigManager(su, cfg)
 	commands := NewCommands(su, cfg, cm)
 	app := &cli.App{
-		Name:  "GOREPO-CLI",
+		Name:  "GOREPO",
 		Usage: "A CLI tool to manage Go monorepos",
 		Commands: []*cli.Command{
 			{
@@ -34,7 +34,7 @@ func main() {
 				Action: commands.Run,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:  "target",
+						Name:  "targets",
 						Usage: "NOT IMPLEMENTED Target root or specific modules (comma separated)",
 					},
 					&cli.BoolFlag{

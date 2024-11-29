@@ -30,7 +30,7 @@ func (cmd *Commands) Init(c *cli.Context) error {
 		return errors.New("monorepo already exists at " + cmd.Config.Runtime.ROOT)
 	}
 
-	config := RootConfig{
+	rootConfig := RootConfig{
 		Name:     c.Args().Get(0),
 		Version:  "0.1.0",
 		Strategy: "workspace",
@@ -38,19 +38,19 @@ func (cmd *Commands) Init(c *cli.Context) error {
 	}
 
 	// ask name
-	if config.Name == "" {
+	if rootConfig.Name == "" {
 		reader := bufio.NewReader(os.Stdin)
-		base := filepath.Base(cmd.Config.Runtime.ROOT)
-		fmt.Print("Enter the monorepo name: " + info(fmt.Sprintf("default: ("+base+")")) + " ")
+		defaultName := filepath.Base(cmd.Config.Runtime.ROOT)
+		fmt.Print("Enter the monorepo name: " + info(fmt.Sprintf("default: ("+defaultName+")")) + " ")
 		response, err := reader.ReadString('\n')
 		if err != nil {
 			return fmt.Errorf("failed to read input: %w", err)
 		}
 		response = strings.TrimSpace(response)
 		if response == "" {
-			response = base
+			response = defaultName
 		}
-		config.Name = response
+		rootConfig.Name = response
 	}
 
 	// ask strategy
@@ -63,23 +63,29 @@ func (cmd *Commands) Init(c *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to read input: %w", err)
 	}
-	config.Vendor = strings.TrimSpace(response) == "y"
+	rootConfig.Vendor = strings.TrimSpace(response) == "y"
 
-	if config.Strategy == "workspace" {
+	// handle go workspace
+	if rootConfig.Strategy == "workspace" {
 		if exists := cmd.ConfigManager.GoWorkspaceExists(); !exists {
+			cmd.SystemUtils.Logger.Verbose("go workspace does not exist yet, running 'go work init'")
 			err := cmd.SystemUtils.Exec.GoCommand(cmd.Config.Runtime.ROOT, "work", "init")
 			if err != nil {
 				return err
 			}
+		} else {
+			cmd.SystemUtils.Logger.Verbose("go workspace already exists, no need to create one")
 		}
-	} else if config.Strategy == "rewrite" {
+	} else if rootConfig.Strategy == "rewrite" {
 		return errors.New("rewrite strategy unsupported yet")
 	} else {
-		return errors.New("invalid strategy '" + config.Strategy + "'")
+		return errors.New("invalid strategy '" + rootConfig.Strategy + "'")
 	}
 
-	if err := cmd.ConfigManager.WriteRootConfig(config); err != nil {
+	if err := cmd.ConfigManager.WriteRootConfig(rootConfig); err != nil {
 		return err
+	} else {
+		cmd.SystemUtils.Logger.Verbose("created monorepo configuration 'work.toml' at root")
 	}
 
 	// todo: check existence of modules folder (go.mod) to sanitize everything (create module.toml and make sure they are in the workspace)
@@ -93,6 +99,7 @@ func (cmd *Commands) List(c *cli.Context) error {
 	if exists := cmd.ConfigManager.RootConfigExists(); !exists {
 		return errors.New("monorepo not found at " + cmd.Config.Runtime.ROOT)
 	}
+	cmd.SystemUtils.Logger.Verbose("listing all modules")
 	modules, err := cmd.ConfigManager.GetModules()
 	if err != nil {
 		return err
