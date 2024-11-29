@@ -53,10 +53,18 @@ func (x *Exec) GoCommand(dir string, args ...string) (err error) {
 }
 
 func (x *Exec) BashCommand(absolutePath, script string) (err error) {
+	// Validate that the directory exists
+	if _, err := os.Stat(absolutePath); os.IsNotExist(err) {
+		return fmt.Errorf("directory does not exist: %s", absolutePath)
+	}
+	// Create the command to run the script
 	cmd := exec.Command("/bin/bash", "-c", script)
-	_, err = cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("failed to run command: %w", err)
+	cmd.Dir = absolutePath // Set the working directory
+	cmd.Stdout = os.Stdout // Redirect standard output to the parent process
+	cmd.Stderr = os.Stderr // Redirect standard error to the parent process
+	// Run the command and handle errors
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to run command in %s: %w", absolutePath, err)
 	}
 	return nil
 }

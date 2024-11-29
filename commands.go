@@ -119,42 +119,40 @@ func (cmd *Commands) Run(c *cli.Context) error {
 		return errors.New("monorepo not found at " + cmd.Config.Runtime.ROOT)
 	}
 
-	// run all <script_name> or run <script_name>
-	// run some <script_name> <module_name> <module_name> <module_name>
-	// run root <script_name>
-
 	if c.Args().Len() < 1 {
-		return errors.New("no command provided, usage: gorepo run 'command'")
+		return errors.New("no script name provided, usage: gorepo run [script_name]")
 	}
 
-	command := c.Args().Get(0)
+	scriptName := c.Args().Get(0)
+
+	cmd.SystemUtils.Logger.Verbose("running script '" + scriptName + "'")
 
 	modules, err := cmd.ConfigManager.GetModules()
 	if err != nil {
 		return err
 	}
 
-	// check all modules have the command
-	// todo: flag to bypass this check (--allow-missing)
+	// check all modules have the script
+	cmd.SystemUtils.Logger.Verbose("checking if all modules have the script")
 	var modulesWithoutScript []string
 	for _, module := range modules {
-		if _, ok := module.ModuleConfig.Scripts[command]; !ok {
+		if _, ok := module.ModuleConfig.Scripts[scriptName]; !ok || module.ModuleConfig.Scripts[scriptName] == "" {
 			modulesWithoutScript = append(modulesWithoutScript, module.ModuleConfig.Name)
 		}
 	}
 	if len(modulesWithoutScript) > 0 {
-		return errors.New("following modules are missing the command '" + command + "' :" + strings.Join(modulesWithoutScript, ", "))
+		return errors.New("not running script, because it is missing in following modules '" + scriptName + "' :" + strings.Join(modulesWithoutScript, ", "))
+	} else {
+		cmd.SystemUtils.Logger.Verbose("all modules have the script")
 	}
 
 	// execute them
 	for _, module := range modules {
-		cmd.SystemUtils.Logger.Info("running command in " + module.ModuleConfig.Name)
+		cmd.SystemUtils.Logger.Info("running script " + scriptName + " in module " + module.ModuleConfig.Name)
 		path := filepath.Join(cmd.Config.Runtime.ROOT, module.RelativePath)
-		for _, script := range module.ModuleConfig.Scripts {
-			err := cmd.SystemUtils.Exec.BashCommand(path, script)
-			if err != nil {
-				return err
-			}
+		script := module.ModuleConfig.Scripts[scriptName]
+		if err := cmd.SystemUtils.Exec.BashCommand(path, script); err != nil {
+			return err
 		}
 	}
 
