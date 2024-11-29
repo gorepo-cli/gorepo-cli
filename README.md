@@ -122,3 +122,14 @@ This command runs all the scripts (bash scripts) defined in `work.toml` and `mod
 By default, it will not run if one of the targeted module is missing the script.
 Note it will run all or nothing. If one fails, it will not revert the operations that already ran.
 
+### gorepo version
+
+#### Description
+
+Prints the version of the CLI
+
+#### Usage
+
+```
+gorepo version
+```
