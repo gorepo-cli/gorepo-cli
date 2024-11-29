@@ -133,3 +133,11 @@ Prints the version of the CLI
 ```
 gorepo version
 ```
+
+## Releases
+
+- v0.1.1: Initial release
+  - implemented gorepo init
+  - implemented gorepo list
+  - implemented gorepo run
+  - implemented gorepo version
