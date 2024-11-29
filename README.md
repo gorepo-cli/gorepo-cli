@@ -2,7 +2,7 @@
     <picture>
         <img style="margin-bottom:0;" width="130" src="./assets/gorepo.png" alt="logo">
     </picture>
-    <p align="center" style="font-size:30px;font-weight:bolder">GOREPO</p>
+    <h1 align="center" >GOREPO</h1>
 </div>
 
 <p align="center">
