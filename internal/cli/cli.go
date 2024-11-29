@@ -63,6 +63,13 @@ func Exec() (err error) {
 				Action: cmd.Debug,
 			},
 		},
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:  "verbose",
+				Usage: "Enable verbose logging for all commands",
+				Value: false,
+			},
+		},
 	}
 	return app.Run(os.Args)
 }
