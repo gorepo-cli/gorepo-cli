@@ -115,8 +115,8 @@ gorepo run [script] [--target] [--dry-run] [--allow-missing]
 #### Parameters
 
 - `script`: the name of the script to run
-- `--target` (optional): the name of the comma-separated module(s) to run the script in, examples: `--target=root`, `--target=mod1,mod2`
-- `--dry-run` (optional): prints the command that would be run without actually running it
+- `--target` NOT IMPLEMENTED (optional): the name of the comma-separated module(s) to run the script in, examples: `--target=root`, `--target=mod1,mod2`
+- `--dry-run` NOT IMPLEMENTED (optional): prints the command that would be run without actually running it
 - `--allow-missing` (optional): allows the script to run even if some of the targets does not have the script
 
 #### Behaviour

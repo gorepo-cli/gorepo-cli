@@ -119,13 +119,18 @@ func (cmd *Commands) Run(c *cli.Context) error {
 		return errors.New("monorepo not found at " + cmd.Config.Runtime.ROOT)
 	}
 
-	if c.Args().Len() < 1 {
-		return errors.New("no script name provided, usage: gorepo run [script_name]")
-	}
-
 	scriptName := c.Args().Get(0)
 
-	cmd.SystemUtils.Logger.Verbose("running script '" + scriptName + "'")
+	if scriptName == "" {
+		return errors.New("no script name provided, usage: gorepo run [script_name]")
+	} else {
+		cmd.SystemUtils.Logger.Verbose("running script '" + scriptName + "'")
+	}
+
+	allowMissing := c.Bool("allow-missing")
+	cmd.SystemUtils.Logger.Verbose("value for flag allowMissing: " + strconv.FormatBool(allowMissing))
+	//dryRun := c.Bool("dry-run")
+	//targets := strings.Split(c.String("target"), ",")
 
 	modules, err := cmd.ConfigManager.GetModules()
 	if err != nil {
@@ -140,17 +145,25 @@ func (cmd *Commands) Run(c *cli.Context) error {
 			modulesWithoutScript = append(modulesWithoutScript, module.ModuleConfig.Name)
 		}
 	}
-	if len(modulesWithoutScript) > 0 {
+	if len(modulesWithoutScript) == len(modules) {
+		return errors.New("not running script, because it is missing in all modules")
+	} else if len(modulesWithoutScript) > 0 && !allowMissing {
 		return errors.New("not running script, because it is missing in following modules '" + scriptName + "' :" + strings.Join(modulesWithoutScript, ", "))
+	} else if len(modulesWithoutScript) > 0 && allowMissing {
+		cmd.SystemUtils.Logger.Verbose("script is missing in following modules (but flag allowMissing was passed) '" + scriptName + "' :" + strings.Join(modulesWithoutScript, ", "))
 	} else {
 		cmd.SystemUtils.Logger.Verbose("all modules have the script")
 	}
 
 	// execute them
 	for _, module := range modules {
-		cmd.SystemUtils.Logger.Info("running script " + scriptName + " in module " + module.ModuleConfig.Name)
 		path := filepath.Join(cmd.Config.Runtime.ROOT, module.RelativePath)
 		script := module.ModuleConfig.Scripts[scriptName]
+		if script == "" {
+			cmd.SystemUtils.Logger.Info("script is empty, skipping")
+			continue
+		}
+		cmd.SystemUtils.Logger.Info("running script " + scriptName + " in module " + module.ModuleConfig.Name)
 		if err := cmd.SystemUtils.Exec.BashCommand(path, script); err != nil {
 			return err
 		}
