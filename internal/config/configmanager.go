@@ -5,6 +5,7 @@ import (
 	"gorepo-cli/pkg/systemutils"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -130,6 +131,10 @@ func (c *ConfigManager) GetModules() (modules []struct {
 		c.SystemUtils.Logger.Warning(err.Error())
 		return modules, err
 	}
+
+	sort.Slice(modules, func(i, j int) bool {
+		return modules[i].ModuleConfig.Name < modules[j].ModuleConfig.Name
+	})
 
 	return modules, nil
 }
