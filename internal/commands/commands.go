@@ -6,15 +6,13 @@ import (
 )
 
 type Commands struct {
-	SystemUtils   systemutils.SystemUtils
-	Config        config.Config
-	ConfigManager config.ConfigManager
+	SystemUtils systemutils.SystemUtils
+	Config      config.Config
 }
 
-func NewCommands(su systemutils.SystemUtils, cfg config.Config, manager config.ConfigManager) *Commands {
+func NewCommands(su systemutils.SystemUtils, cfg config.Config) *Commands {
 	return &Commands{
-		SystemUtils:   su,
-		Config:        cfg,
-		ConfigManager: manager,
+		SystemUtils: su,
+		Config:      cfg,
 	}
 }

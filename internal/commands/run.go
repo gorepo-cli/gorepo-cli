@@ -19,7 +19,7 @@ func contains(s []string, e string) bool {
 }
 
 func (cmd *Commands) Run(c *cli.Context) error {
-	if exists := cmd.ConfigManager.RootConfigExists(); !exists {
+	if exists := cmd.Config.RootConfigExists(); !exists {
 		return errors.New("monorepo not found at " + cmd.Config.Runtime.ROOT)
 	}
 
@@ -46,18 +46,15 @@ func (cmd *Commands) Run(c *cli.Context) error {
 	if targets[0] == "root" {
 		cmd.SystemUtils.Logger.Verbose("running script in root not supported yet")
 	} else {
-		allModules, err := cmd.ConfigManager.GetModules()
+		allModules, err := cmd.Config.GetModules()
 		if err != nil {
 			return err
 		}
 
-		var modules []struct {
-			RelativePath string
-			ModuleConfig config.ModuleConfig
-		}
+		var modules []config.ModuleConfig
 
 		for _, module := range allModules {
-			if targets[0] == "all" || contains(targets, module.ModuleConfig.Name) {
+			if targets[0] == "all" || contains(targets, module.Name) {
 				modules = append(modules, module)
 			}
 		}
@@ -66,8 +63,8 @@ func (cmd *Commands) Run(c *cli.Context) error {
 		cmd.SystemUtils.Logger.Verbose("checking if all modules have the script")
 		var modulesWithoutScript []string
 		for _, module := range modules {
-			if _, ok := module.ModuleConfig.Scripts[scriptName]; !ok || module.ModuleConfig.Scripts[scriptName] == "" {
-				modulesWithoutScript = append(modulesWithoutScript, module.ModuleConfig.Name)
+			if _, ok := module.Scripts[scriptName]; !ok || module.Scripts[scriptName] == "" {
+				modulesWithoutScript = append(modulesWithoutScript, module.Name)
 			}
 		}
 		if len(modulesWithoutScript) == len(modules) {
@@ -83,12 +80,12 @@ func (cmd *Commands) Run(c *cli.Context) error {
 		// execute them
 		for _, module := range modules {
 			path := filepath.Join(cmd.Config.Runtime.ROOT, module.RelativePath)
-			script := module.ModuleConfig.Scripts[scriptName]
+			script := module.Scripts[scriptName]
 			if script == "" {
 				cmd.SystemUtils.Logger.Info("script is empty, skipping")
 				continue
 			}
-			cmd.SystemUtils.Logger.Info("running script " + scriptName + " in module " + module.ModuleConfig.Name)
+			cmd.SystemUtils.Logger.Info("running script " + scriptName + " in module " + module.Name)
 			if dryRun {
 				continue
 			}

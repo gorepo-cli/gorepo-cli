@@ -13,7 +13,7 @@ func (cmd *Commands) Debug(c *cli.Context) error {
 	fmt.Println("WD_(COMMAND_RAN_FROM)........" + cmd.Config.Runtime.WD)
 	fmt.Println("ROOT (OF THE MONOREPO)......." + cmd.Config.Runtime.ROOT)
 	fmt.Println("MONOREPO EXISTS (AT ROOT)...." +
-		strconv.FormatBool(cmd.ConfigManager.RootConfigExists()))
+		strconv.FormatBool(cmd.Config.RootConfigExists()))
 
 	cmd.SystemUtils.Logger.Info("===================")
 	cmd.SystemUtils.Logger.Info("STATIC_CONFIG")
@@ -22,12 +22,12 @@ func (cmd *Commands) Debug(c *cli.Context) error {
 	fmt.Println("ROOT FILE NAME..............." + cmd.Config.Static.RootFileName)
 	fmt.Println("MODULE FILE NAME............." + cmd.Config.Static.ModuleFileName)
 
-	if cmd.ConfigManager.RootConfigExists() {
+	if cmd.Config.RootConfigExists() {
 		cmd.SystemUtils.Logger.Info("===================")
 		cmd.SystemUtils.Logger.Info("ROOT_CONFIG")
 		cmd.SystemUtils.Logger.Info("===================")
 
-		cfg, err := cmd.ConfigManager.LoadRootConfig()
+		cfg, err := cmd.Config.LoadRootConfig()
 		if err != nil {
 			return err
 		}
@@ -37,7 +37,7 @@ func (cmd *Commands) Debug(c *cli.Context) error {
 		fmt.Println("STRATEGY......" + cfg.Strategy)
 		fmt.Println("VENDOR........" + strconv.FormatBool(cfg.Vendor))
 
-		modules, err := cmd.ConfigManager.GetModules()
+		modules, err := cmd.Config.GetModules()
 		if err != nil {
 			return err
 		}
@@ -51,12 +51,12 @@ func (cmd *Commands) Debug(c *cli.Context) error {
 		}
 
 		for _, module := range modules {
-			cmd.SystemUtils.Logger.Info("MODULE " + module.ModuleConfig.Name)
-			fmt.Println("MODULE_NAME........ " + module.ModuleConfig.Name)
+			cmd.SystemUtils.Logger.Info("MODULE " + module.Name)
+			fmt.Println("MODULE_NAME........ " + module.Name)
 			fmt.Println("MODULE_PATH........ " + module.RelativePath)
-			if len(module.ModuleConfig.Scripts) > 0 {
+			if len(module.Scripts) > 0 {
 				fmt.Println("COMMANDS........")
-				for k, v := range module.ModuleConfig.Scripts {
+				for k, v := range module.Scripts {
 					fmt.Println("  " + k + " -> " + v)
 				}
 			}

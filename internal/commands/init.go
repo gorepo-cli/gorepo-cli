@@ -12,7 +12,7 @@ import (
 )
 
 func (cmd *Commands) Init(c *cli.Context) error {
-	if exists := cmd.ConfigManager.RootConfigExists(); exists {
+	if exists := cmd.Config.RootConfigExists(); exists {
 		return errors.New("monorepo already exists at " + cmd.Config.Runtime.ROOT)
 	}
 
@@ -53,7 +53,7 @@ func (cmd *Commands) Init(c *cli.Context) error {
 
 	// handle go workspace
 	if rootConfig.Strategy == "workspace" {
-		if exists := cmd.ConfigManager.GoWorkspaceExists(); !exists {
+		if exists := cmd.Config.GoWorkspaceExists(); !exists {
 			cmd.SystemUtils.Logger.Verbose("go workspace does not exist yet, running 'go work init'")
 			err := cmd.SystemUtils.Exec.GoCommand(cmd.Config.Runtime.ROOT, "work", "init")
 			if err != nil {
@@ -68,7 +68,7 @@ func (cmd *Commands) Init(c *cli.Context) error {
 		return errors.New("invalid strategy '" + rootConfig.Strategy + "'")
 	}
 
-	if err := cmd.ConfigManager.WriteRootConfig(rootConfig); err != nil {
+	if err := cmd.Config.WriteRootConfig(rootConfig); err != nil {
 		return err
 	} else {
 		cmd.SystemUtils.Logger.Verbose("created monorepo configuration 'work.toml' at root")

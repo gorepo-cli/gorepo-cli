@@ -14,8 +14,7 @@ func Exec() (err error) {
 	if err != nil {
 		return err
 	}
-	cm := config.NewConfigManager(su, cfg)
-	cmd := commands.NewCommands(su, cfg, cm)
+	cmd := commands.NewCommands(su, cfg)
 	app := &cli.App{
 		Name:  "GOREPO",
 		Usage: "A CLI tool to manage Go monorepos",

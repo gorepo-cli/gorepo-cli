@@ -6,10 +6,10 @@ import (
 )
 
 func (cmd *Commands) List(c *cli.Context) error {
-	if exists := cmd.ConfigManager.RootConfigExists(); !exists {
+	if exists := cmd.Config.RootConfigExists(); !exists {
 		return errors.New("monorepo not found at " + cmd.Config.Runtime.ROOT)
 	}
-	modules, err := cmd.ConfigManager.GetModules()
+	modules, err := cmd.Config.GetModules()
 	if err != nil {
 		return err
 	}
@@ -17,7 +17,7 @@ func (cmd *Commands) List(c *cli.Context) error {
 		cmd.SystemUtils.Logger.Info("no modules found")
 	} else {
 		for _, module := range modules {
-			cmd.SystemUtils.Logger.Default(module.ModuleConfig.Name)
+			cmd.SystemUtils.Logger.Default(module.Name)
 		}
 	}
 	return nil
