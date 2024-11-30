@@ -37,17 +37,17 @@ func Exec() (err error) {
 					&cli.StringFlag{
 						Name:  "target",
 						Value: "all",
-						Usage: "NOT IMPLEMENTED Target root or specific modules (comma separated)",
+						Usage: "Target root or specific modules (comma separated)",
 					},
 					&cli.BoolFlag{
 						Name:  "dry-run",
 						Value: false,
-						Usage: "NOT IMPLEMENTED Print the commands that would be executed",
+						Usage: "Print the commands that would be executed",
 					},
 					&cli.BoolFlag{
 						Name:  "allow-missing",
 						Value: false,
-						Usage: "NOT IMPLEMENTED Run the scripts in the modules that have it, even if it is missing in some",
+						Usage: "Run the scripts in the modules that have it, even if it is missing in some",
 					},
 				},
 			},
