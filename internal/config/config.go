@@ -52,7 +52,7 @@ func NewConfig(su systemutils.SystemUtils) (cfg Config, err error) {
 func getRootPath(cfg Config) (root string, err error) {
 	currentDir := cfg.Runtime.WD
 	if currentDir == "" {
-		return "", fmt.Errorf("empty_wd")
+		return "", fmt.Errorf("no working directory")
 	}
 	for i := 0; i <= cfg.Static.MaxRecursion; i++ {
 		filePath := filepath.Join(currentDir, cfg.Static.RootFileName)
@@ -65,7 +65,7 @@ func getRootPath(cfg Config) (root string, err error) {
 		}
 		currentDir = parentDir
 	}
-	return "", fmt.Errorf("root_not_found")
+	return "", fmt.Errorf("root not found")
 }
 
 /////////////////////////
@@ -144,7 +144,7 @@ func (c *Config) GetModules() (modules []ModuleConfig, err error) {
 	})
 
 	if err != nil {
-		c.su.Logger.Warning(err.Error())
+		c.su.Logger.WarningLn(err.Error())
 		return modules, err
 	}
 

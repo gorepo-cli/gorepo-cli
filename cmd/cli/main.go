@@ -9,7 +9,7 @@ import (
 func main() {
 	su := systemutils.NewSystemUtils()
 	if err := cli.Exec(); err != nil {
-		su.Logger.Fatal(err.Error())
+		su.Logger.FatalLn(err.Error())
 		os.Exit(1)
 	}
 }

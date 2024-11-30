@@ -28,15 +28,15 @@ func (cmd *Commands) Run(c *cli.Context) error {
 	if scriptName == "" {
 		return errors.New("no script name provided, usage: gorepo run [script_name]")
 	} else {
-		cmd.SystemUtils.Logger.Verbose("running script '" + scriptName + "'")
+		cmd.SystemUtils.Logger.VerboseLn("running script '" + scriptName + "'")
 	}
 
 	allowMissing := c.Bool("allow-missing")
-	cmd.SystemUtils.Logger.Verbose("value for flag allowMissing: " + strconv.FormatBool(allowMissing))
+	cmd.SystemUtils.Logger.VerboseLn("value for flag allowMissing: " + strconv.FormatBool(allowMissing))
 	dryRun := c.Bool("dry-run")
-	cmd.SystemUtils.Logger.Verbose("value for flag dryRun:       " + strconv.FormatBool(dryRun))
+	cmd.SystemUtils.Logger.VerboseLn("value for flag dryRun:       " + strconv.FormatBool(dryRun))
 	targets := strings.Split(c.String("target"), ",")
-	cmd.SystemUtils.Logger.Verbose("value for flag target:       " + strings.Join(targets, ","))
+	cmd.SystemUtils.Logger.VerboseLn("value for flag target:       " + strings.Join(targets, ","))
 	for _, target := range targets {
 		if target == "root" && len(targets) > 1 {
 			return errors.New("cannot run script in root and in modules at the same time, you're being too fancy")
@@ -44,7 +44,7 @@ func (cmd *Commands) Run(c *cli.Context) error {
 	}
 
 	if targets[0] == "root" {
-		cmd.SystemUtils.Logger.Verbose("running script in root not supported yet")
+		cmd.SystemUtils.Logger.VerboseLn("running script in root not supported yet")
 	} else {
 		allModules, err := cmd.Config.GetModules()
 		if err != nil {
@@ -60,7 +60,7 @@ func (cmd *Commands) Run(c *cli.Context) error {
 		}
 
 		// check all modules have the script
-		cmd.SystemUtils.Logger.Verbose("checking if all modules have the script")
+		cmd.SystemUtils.Logger.VerboseLn("checking if all modules have the script")
 		var modulesWithoutScript []string
 		for _, module := range modules {
 			if _, ok := module.Scripts[scriptName]; !ok || module.Scripts[scriptName] == "" {
@@ -72,9 +72,9 @@ func (cmd *Commands) Run(c *cli.Context) error {
 		} else if len(modulesWithoutScript) > 0 && !allowMissing {
 			return errors.New("not running script, because it is missing in following modules '" + scriptName + "' :" + strings.Join(modulesWithoutScript, ", "))
 		} else if len(modulesWithoutScript) > 0 && allowMissing {
-			cmd.SystemUtils.Logger.Verbose("script is missing in following modules (but flag allowMissing was passed) '" + scriptName + "' :" + strings.Join(modulesWithoutScript, ", "))
+			cmd.SystemUtils.Logger.VerboseLn("script is missing in following modules (but flag allowMissing was passed) '" + scriptName + "' :" + strings.Join(modulesWithoutScript, ", "))
 		} else {
-			cmd.SystemUtils.Logger.Verbose("all modules have the script")
+			cmd.SystemUtils.Logger.VerboseLn("all modules have the script")
 		}
 
 		// execute them
@@ -82,10 +82,10 @@ func (cmd *Commands) Run(c *cli.Context) error {
 			path := filepath.Join(cmd.Config.Runtime.ROOT, module.RelativePath)
 			script := module.Scripts[scriptName]
 			if script == "" {
-				cmd.SystemUtils.Logger.Info("script is empty, skipping")
+				cmd.SystemUtils.Logger.InfoLn("script is empty, skipping")
 				continue
 			}
-			cmd.SystemUtils.Logger.Info("running script " + scriptName + " in module " + module.Name)
+			cmd.SystemUtils.Logger.InfoLn("running script " + scriptName + " in module " + module.Name)
 			if dryRun {
 				continue
 			}

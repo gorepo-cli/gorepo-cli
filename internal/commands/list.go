@@ -14,10 +14,10 @@ func (cmd *Commands) List(c *cli.Context) error {
 		return err
 	}
 	if len(modules) == 0 {
-		cmd.SystemUtils.Logger.Info("no modules found")
+		cmd.SystemUtils.Logger.InfoLn("no modules found")
 	} else {
 		for _, module := range modules {
-			cmd.SystemUtils.Logger.Default(module.Name)
+			cmd.SystemUtils.Logger.DefaultLn(module.Name)
 		}
 	}
 	return nil

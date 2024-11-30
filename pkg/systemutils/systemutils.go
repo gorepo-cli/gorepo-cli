@@ -69,41 +69,61 @@ func (x *Exec) BashCommand(absolutePath, script string) (err error) {
 }
 
 var (
-	fatal   = color.New(color.FgRed).SprintFunc()
-	warning = color.New(color.FgYellow).SprintFunc()
-	verbose = color.New(color.FgHiBlack).SprintFunc()
-	success = color.New(color.FgGreen).SprintFunc()
-	info    = color.New(color.FgCyan).SprintFunc()
+	FatalColor   = color.New(color.FgRed).SprintFunc()
+	WarningColor = color.New(color.FgYellow).SprintFunc()
+	VerboseColor = color.New(color.FgHiBlack).SprintFunc()
+	SuccessColor = color.New(color.FgGreen).SprintFunc()
+	InfoColor    = color.New(color.FgCyan).SprintFunc()
 )
 
 type Logger struct {
 	Logger *log.Logger
 }
 
+func (su *Logger) FatalLn(msg string) {
+	su.Logger.Println(FatalColor(msg))
+}
+
 func (su *Logger) Fatal(msg string) {
-	su.Logger.Println(fatal(msg))
+	su.Logger.Print(FatalColor(msg))
+}
+
+func (su *Logger) WarningLn(msg string) {
+	su.Logger.Println(WarningColor(msg))
 }
 
 func (su *Logger) Warning(msg string) {
-	su.Logger.Println(warning(msg))
+	su.Logger.Print(WarningColor(msg))
+}
+
+func (su *Logger) VerboseLn(msg string) {
+	su.Logger.Println(VerboseColor(msg))
 }
 
 func (su *Logger) Verbose(msg string) {
-	su.Logger.Println(verbose(msg))
+	su.Logger.Print(VerboseColor(msg))
+}
+
+func (su *Logger) SuccessLn(msg string) {
+	su.Logger.Println(SuccessColor(msg))
 }
 
 func (su *Logger) Success(msg string) {
-	su.Logger.Println(success(msg))
+	su.Logger.Print(SuccessColor(msg))
+}
+
+func (su *Logger) InfoLn(msg string) {
+	su.Logger.Println(InfoColor(msg))
 }
 
 func (su *Logger) Info(msg string) {
-	su.Logger.Println(info(msg))
+	su.Logger.Print(InfoColor(msg))
 }
 
-func (su *Logger) ApplyInfoColor(msg string) string {
-	return info(msg)
+func (su *Logger) DefaultLn(msg string) {
+	su.Logger.Println(msg)
 }
 
 func (su *Logger) Default(msg string) {
-	su.Logger.Println(msg)
+	fmt.Print(msg)
 }
