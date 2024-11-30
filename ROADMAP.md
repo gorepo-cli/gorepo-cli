@@ -131,3 +131,37 @@ ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.@!#$%^&()[]{}'+
 //	},
 //},
 //{}, // sanitize / lint / health / check
+
+
+Add Context Support for Cancellation
+
+Issue: Long-running operations cannot be cancelled by the user.
+
+Recommendation: Pass context.Context to functions to handle cancellation and timeouts.
+
+go
+Copy code
+func (cmd *Commands) Run(c *cli.Context) error {
+ctx := c.Context
+// Pass ctx to functions and check for cancellation
+}
+
+Provide Execution Summaries
+
+Issue: Users don't receive a summary of the executed commands.
+
+Recommendation: Collect and display a summary at the end of script execution.
+
+go
+Copy code
+var failedModules []string
+// ... (during execution)
+if err != nil {
+failedModules = append(failedModules, module.Name)
+}
+// After execution
+if len(failedModules) > 0 {
+cmd.SystemUtils.Logger.Warning("Scripts failed in modules: " + strings.Join(failedModules, ", "))
+} else {
+cmd.SystemUtils.Logger.Success("All scripts ran successfully.")
+}

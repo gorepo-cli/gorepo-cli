@@ -49,6 +49,11 @@ func Exec() (err error) {
 						Value: false,
 						Usage: "Run the scripts in the modules that have it, even if it is missing in some",
 					},
+					//&cli.BoolFlag{
+					//	Name:  "parallel",
+					//	Value: false,
+					//	Usage: "Run the scripts in parallel",
+					//},
 				},
 			},
 			{

@@ -8,19 +8,19 @@ import (
 	"os/exec"
 )
 
+// todo: add interface
+
 type SystemUtils struct {
 	Fs     Fs
 	Exec   Exec
-	Logger Logger
+	Logger *LevelLogger
 }
 
 func NewSystemUtils() SystemUtils {
 	return SystemUtils{
-		Fs:   Fs{},
-		Exec: Exec{},
-		Logger: Logger{
-			Logger: log.New(os.Stdout, "", 0),
-		},
+		Fs:     Fs{},
+		Exec:   Exec{},
+		Logger: NewLevelLogger(),
 	}
 }
 
@@ -68,6 +68,11 @@ func (x *Exec) BashCommand(absolutePath, script string) (err error) {
 	return nil
 }
 
+// LevelLogger is a logger that logs messages of different levels
+type LevelLogger struct {
+	*log.Logger
+}
+
 var (
 	FatalColor   = color.New(color.FgRed).SprintFunc()
 	WarningColor = color.New(color.FgYellow).SprintFunc()
@@ -76,54 +81,54 @@ var (
 	InfoColor    = color.New(color.FgCyan).SprintFunc()
 )
 
-type Logger struct {
-	Logger *log.Logger
+func NewLevelLogger() *LevelLogger {
+	return &LevelLogger{Logger: log.New(os.Stdout, "", 0)}
 }
 
-func (su *Logger) FatalLn(msg string) {
-	su.Logger.Println(FatalColor(msg))
+func (l *LevelLogger) FatalLn(msg string) {
+	l.Println(FatalColor(msg))
 }
 
-func (su *Logger) Fatal(msg string) {
-	su.Logger.Print(FatalColor(msg))
+func (l *LevelLogger) Fatal(msg string) {
+	l.Print(FatalColor(msg))
 }
 
-func (su *Logger) WarningLn(msg string) {
-	su.Logger.Println(WarningColor(msg))
+func (l *LevelLogger) WarningLn(msg string) {
+	l.Logger.Println(WarningColor(msg))
 }
 
-func (su *Logger) Warning(msg string) {
-	su.Logger.Print(WarningColor(msg))
+func (l *LevelLogger) Warning(msg string) {
+	l.Logger.Print(WarningColor(msg))
 }
 
-func (su *Logger) VerboseLn(msg string) {
-	su.Logger.Println(VerboseColor(msg))
+func (l *LevelLogger) VerboseLn(msg string) {
+	l.Logger.Println(VerboseColor(msg))
 }
 
-func (su *Logger) Verbose(msg string) {
-	su.Logger.Print(VerboseColor(msg))
+func (l *LevelLogger) Verbose(msg string) {
+	l.Logger.Print(VerboseColor(msg))
 }
 
-func (su *Logger) SuccessLn(msg string) {
-	su.Logger.Println(SuccessColor(msg))
+func (l *LevelLogger) SuccessLn(msg string) {
+	l.Logger.Println(SuccessColor(msg))
 }
 
-func (su *Logger) Success(msg string) {
-	su.Logger.Print(SuccessColor(msg))
+func (l *LevelLogger) Success(msg string) {
+	l.Logger.Print(SuccessColor(msg))
 }
 
-func (su *Logger) InfoLn(msg string) {
-	su.Logger.Println(InfoColor(msg))
+func (l *LevelLogger) InfoLn(msg string) {
+	l.Logger.Println(InfoColor(msg))
 }
 
-func (su *Logger) Info(msg string) {
-	su.Logger.Print(InfoColor(msg))
+func (l *LevelLogger) Info(msg string) {
+	l.Logger.Print(InfoColor(msg))
 }
 
-func (su *Logger) DefaultLn(msg string) {
-	su.Logger.Println(msg)
+func (l *LevelLogger) DefaultLn(msg string) {
+	l.Logger.Println(msg)
 }
 
-func (su *Logger) Default(msg string) {
+func (l *LevelLogger) Default(msg string) {
 	fmt.Print(msg)
 }
