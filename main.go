@@ -623,20 +623,15 @@ func Run() (err error) {
 						Usage: "Target root or specific modules (comma separated)",
 					},
 					&cli.BoolFlag{
-						Name:  "dry-run",
-						Value: false,
-						Usage: "Print the commands that would be executed",
-					},
-					&cli.BoolFlag{
 						Name:  "allow-missing",
 						Value: false,
 						Usage: "Run the scripts in the modules that have it, even if it is missing in some",
 					},
-					//&cli.BoolFlag{
-					//	Name:  "parallel",
-					//	Value: false,
-					//	Usage: "Run the scripts in parallel",
-					//},
+					&cli.IntFlag{
+						Name:  "parallel",
+						Value: 2,
+						Usage: "Run scripts in parallel (default 3) NOT IMPLEMENTED",
+					},
 				},
 			},
 			{
@@ -655,6 +650,11 @@ func Run() (err error) {
 				Name:  "verbose",
 				Usage: "Enable verbose logging for all commands",
 				Value: false,
+			},
+			&cli.BoolFlag{
+				Name:  "dry-run",
+				Value: false,
+				Usage: "Print the commands that would be executed - NOT IMPLEMENTED",
 			},
 		},
 	}
