@@ -57,7 +57,7 @@ func (x *Exec) BashCommand(absolutePath, script string) (err error) {
 		return fmt.Errorf("directory does not exist: %s", absolutePath)
 	}
 	// Create the command to run the script
-	cmd := exec.Command("/bin/bash", "-c", script)
+	cmd := exec.Command("/bin/sh", "-c", script)
 	cmd.Dir = absolutePath // Set the working directory
 	cmd.Stdout = os.Stdout // Redirect standard output to the parent process
 	cmd.Stderr = os.Stderr // Redirect standard error to the parent process
