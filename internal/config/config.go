@@ -88,11 +88,7 @@ type ModuleConfig struct {
 
 func (c *Config) RootConfigExists() bool {
 	filePath := filepath.Join(c.Runtime.ROOT, c.Static.RootFileName)
-	// todo: use su
-	if _, err := os.Stat(filePath); err == nil {
-		return true
-	}
-	return false
+	return c.su.Fs.FileExists(filePath)
 }
 
 func (c *Config) LoadRootConfig() (cfg RootConfig, err error) {
@@ -118,11 +114,7 @@ func (c *Config) WriteRootConfig(rootConfig RootConfig) (err error) {
 
 func (c *Config) GoWorkspaceExists() bool {
 	filePath := filepath.Join(c.Runtime.ROOT, "go.work")
-	// todo: use su
-	if _, err := os.Stat(filePath); err == nil {
-		return true
-	}
-	return false
+	return c.su.Fs.FileExists(filePath)
 }
 
 func (c *Config) GetModules() (modules []ModuleConfig, err error) {
