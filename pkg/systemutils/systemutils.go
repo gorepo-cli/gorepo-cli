@@ -8,23 +8,32 @@ import (
 	"os/exec"
 )
 
-// todo: add interface
-
+// SystemUtils contains side effect utilities that interact with the system
 type SystemUtils struct {
-	Fs     Fs
-	Exec   Exec
+	Fs     FsInteractions
+	Exec   Executor
 	Logger *LevelLogger
 }
 
 func NewSystemUtils() SystemUtils {
 	return SystemUtils{
-		Fs:     Fs{},
-		Exec:   Exec{},
+		Fs:     &Fs{},
+		Exec:   &Exec{},
 		Logger: NewLevelLogger(),
 	}
 }
 
+// FsInteractions defines methods to interact with the filesystem
+type FsInteractions interface {
+	FileExists(path string) bool
+	WriteFile(path string, content []byte) error
+	ReadFile(path string) ([]byte, error)
+}
+
+// Fs implements the FsInteractions interface
 type Fs struct{}
+
+var _ FsInteractions = &Fs{}
 
 func (fs *Fs) FileExists(path string) (exists bool) {
 	_, err := os.Stat(path)
@@ -39,11 +48,21 @@ func (fs *Fs) ReadFile(path string) ([]byte, error) {
 	return os.ReadFile(path)
 }
 
+// Executor defines methods to run bash commands
+type Executor interface {
+	GoCommand(dir string, args ...string) error
+	BashCommand(absolutePath, script string) error
+}
+
+// Exec implements the Executor interface
 type Exec struct{}
 
-func (x *Exec) GoCommand(dir string, args ...string) (err error) {
+var _ Executor = &Exec{}
+
+// GoCommand runs a go command in a given directory
+func (x *Exec) GoCommand(absolutePath string, args ...string) (err error) {
 	cmd := exec.Command("go", args...)
-	cmd.Dir = dir
+	cmd.Dir = absolutePath
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("failed to run command: %w\nOutput: %s", err, string(output))
@@ -51,24 +70,22 @@ func (x *Exec) GoCommand(dir string, args ...string) (err error) {
 	return nil
 }
 
+// BashCommand runs a bash script in a given directory
 func (x *Exec) BashCommand(absolutePath, script string) (err error) {
-	// Validate that the directory exists
 	if _, err := os.Stat(absolutePath); os.IsNotExist(err) {
 		return fmt.Errorf("directory does not exist: %s", absolutePath)
 	}
-	// Create the command to run the script
 	cmd := exec.Command("/bin/sh", "-c", script)
-	cmd.Dir = absolutePath // Set the working directory
-	cmd.Stdout = os.Stdout // Redirect standard output to the parent process
-	cmd.Stderr = os.Stderr // Redirect standard error to the parent process
-	// Run the command and handle errors
+	cmd.Dir = absolutePath
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to run command in %s: %w", absolutePath, err)
 	}
 	return nil
 }
 
-// LevelLogger is a logger that logs messages of different levels
+// LevelLogger is a logger that can log at different levels
 type LevelLogger struct {
 	*log.Logger
 }

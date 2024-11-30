@@ -26,8 +26,6 @@ type Static struct {
 	ModuleFileName string // File name to identify a module
 }
 
-/////////////////////////
-
 func NewConfig(su systemutils.SystemUtils) (cfg Config, err error) {
 	cfg.Static = Static{
 		MaxRecursion:   7,
