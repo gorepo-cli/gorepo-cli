@@ -144,6 +144,14 @@ Prints the version of the CLI
 gorepo version
 ```
 
+## Contributing
+
+Contributions are welcome, please open an issue or submit a pull request.
+
+## License
+
+This project is licensed under the MIT License.
+
 # Releases
 
 - v0.1.1: Initial release
