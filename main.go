@@ -16,7 +16,7 @@ import (
 	"strings"
 )
 
-// SystemUtils contains side effect utilities that interact with the system
+// SystemUtils contains utilities that interact with the system
 type SystemUtils struct {
 	Fs     FsI
 	Exec   ExecI
@@ -34,8 +34,8 @@ func NewSystemUtils(fs FsI, x ExecI, l Llog) SystemUtils {
 // FsI defines methods to interact with the filesystem
 type FsI interface {
 	Exists(path string) bool
-	Write(path string, content []byte) error
 	Read(path string) ([]byte, error)
+	Write(path string, content []byte) error
 }
 
 // Fs implements FsI
@@ -48,12 +48,12 @@ func (fs *Fs) Exists(path string) (exists bool) {
 	return err == nil
 }
 
-func (fs *Fs) Write(path string, content []byte) (err error) {
-	return os.WriteFile(path, content, 0644)
-}
-
 func (fs *Fs) Read(path string) ([]byte, error) {
 	return os.ReadFile(path)
+}
+
+func (fs *Fs) Write(path string, content []byte) (err error) {
+	return os.WriteFile(path, content, 0644)
 }
 
 // ExecI defines methods to run commands
@@ -140,20 +140,22 @@ func (l *Llog) Default(msg string) {
 
 // Config contains and manages configuration for the monorepo
 type Config struct {
-	Runtime RuntimeConfig
 	Static  StaticConfig
+	Runtime RuntimeConfig
 	su      SystemUtils
 }
 
-type RuntimeConfig struct {
-	WD   string // Working directory, folder where cli was executed
-	ROOT string // Root of the monorepo
-}
-
+// StaticConfig contains the static configuration of the monorepo
 type StaticConfig struct {
 	MaxRecursion   int    // Max recursion depth to search for monorepo root
 	RootFileName   string // File name to identify the monorepo
 	ModuleFileName string // File name to identify a module
+}
+
+// RuntimeConfig contains the runtime configuration of the monorepo
+type RuntimeConfig struct {
+	WD   string // Working directory, folder where cli was executed
+	ROOT string // Root of the monorepo
 }
 
 func NewConfig(su SystemUtils) (cfg Config, err error) {
@@ -212,11 +214,13 @@ type ModuleConfig struct {
 	Scripts      map[string]string `toml:"scripts"`
 }
 
+// RootConfigExists checks if a file work.toml exists at the root
 func (c *Config) RootConfigExists() bool {
 	filePath := filepath.Join(c.Runtime.ROOT, c.Static.RootFileName)
 	return c.su.Fs.Exists(filePath)
 }
 
+// LoadRootConfig loads the root configuration of the monorepo
 func (c *Config) LoadRootConfig() (cfg RootConfig, err error) {
 	file, err := c.su.Fs.Read(filepath.Join(c.Runtime.ROOT, c.Static.RootFileName))
 	if err != nil {
@@ -229,6 +233,7 @@ func (c *Config) LoadRootConfig() (cfg RootConfig, err error) {
 	return cfg, nil
 }
 
+// WriteRootConfig writes the root configuration of the monorepo
 func (c *Config) WriteRootConfig(rootConfig RootConfig) (err error) {
 	configStr, err := toml.Marshal(rootConfig)
 	if err != nil {
@@ -238,11 +243,13 @@ func (c *Config) WriteRootConfig(rootConfig RootConfig) (err error) {
 	return c.su.Fs.Write(filePath, configStr)
 }
 
+// GoWorkspaceExists checks if a file go.work exists at the root
 func (c *Config) GoWorkspaceExists() bool {
 	filePath := filepath.Join(c.Runtime.ROOT, "go.work")
 	return c.su.Fs.Exists(filePath)
 }
 
+// GetModules returns all modules in the monorepo in alphabetical order
 func (c *Config) GetModules() (modules []ModuleConfig, err error) {
 	currentPath := c.Runtime.ROOT
 	err = filepath.Walk(currentPath, func(path string, info os.FileInfo, err error) error {
@@ -275,6 +282,7 @@ func (c *Config) GetModules() (modules []ModuleConfig, err error) {
 	return modules, nil
 }
 
+// LoadModuleConfig loads the configuration of a module
 func (c *Config) LoadModuleConfig(relativePath string) (cfg ModuleConfig, err error) {
 	path := filepath.Join(c.Runtime.ROOT, relativePath, c.Static.ModuleFileName)
 	file, err := c.su.Fs.Read(path)
@@ -290,6 +298,7 @@ func (c *Config) LoadModuleConfig(relativePath string) (cfg ModuleConfig, err er
 	return cfg, nil
 }
 
+// WriteModuleConfig writes the configuration of a module
 func (c *Config) WriteModuleConfig(modConfig ModuleConfig, relativePath, name string) (err error) {
 	// todo
 	return nil
@@ -308,6 +317,7 @@ func NewCommands(su SystemUtils, cfg Config) *Commands {
 	}
 }
 
+// Init implements `gorepo init`
 func (cmd *Commands) Init(c *cli.Context) error {
 	if exists := cmd.Config.RootConfigExists(); exists {
 		return errors.New("monorepo already exists at " + cmd.Config.Runtime.ROOT)
@@ -378,6 +388,7 @@ func (cmd *Commands) Init(c *cli.Context) error {
 	return nil
 }
 
+// List implements `gorepo list`
 func (cmd *Commands) List(c *cli.Context) error {
 	if exists := cmd.Config.RootConfigExists(); !exists {
 		return errors.New("monorepo not found at " + cmd.Config.Runtime.ROOT)
@@ -405,6 +416,7 @@ func contains(s []string, e string) bool {
 	return false
 }
 
+// Run implements `gorepo run`
 func (cmd *Commands) Run(c *cli.Context) error {
 	if exists := cmd.Config.RootConfigExists(); !exists {
 		return errors.New("monorepo not found at " + cmd.Config.Runtime.ROOT)
@@ -485,13 +497,16 @@ func (cmd *Commands) Run(c *cli.Context) error {
 	return nil
 }
 
+// version is injected at build time
 var version = "dev"
 
+// Version implements `gorepo version`
 func (cmd *Commands) Version(c *cli.Context) error {
 	cmd.SystemUtils.Logger.DefaultLn(version)
 	return nil
 }
 
+// Debug implements `gorepo debug`
 func (cmd *Commands) Debug(c *cli.Context) error {
 	cmd.SystemUtils.Logger.InfoLn("===================")
 	cmd.SystemUtils.Logger.InfoLn("RUNTIME_CONFIG")
@@ -622,6 +637,7 @@ func Run() (err error) {
 	return app.Run(os.Args)
 }
 
+// main is the entry point
 func main() {
 	su := NewSystemUtils(&Fs{}, &Exec{}, *NewLevelLogger())
 	if err := Run(); err != nil {
