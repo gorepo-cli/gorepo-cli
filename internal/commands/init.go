@@ -41,7 +41,7 @@ func (cmd *Commands) Init(c *cli.Context) error {
 	}
 
 	// ask strategy
-	cmd.SystemUtils.Logger.Info("Using go workspace strategy by default (no other option for now)")
+	cmd.SystemUtils.Logger.InfoLn("Using go workspace strategy by default (no other option for now)")
 
 	// ask if should vendor
 	reader := bufio.NewReader(os.Stdin)

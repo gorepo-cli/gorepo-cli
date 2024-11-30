@@ -89,40 +89,20 @@ func (l *LevelLogger) FatalLn(msg string) {
 	l.Println(FatalColor(msg))
 }
 
-func (l *LevelLogger) Fatal(msg string) {
-	l.Print(FatalColor(msg))
-}
-
 func (l *LevelLogger) WarningLn(msg string) {
 	l.Logger.Println(WarningColor(msg))
-}
-
-func (l *LevelLogger) Warning(msg string) {
-	l.Logger.Print(WarningColor(msg))
 }
 
 func (l *LevelLogger) VerboseLn(msg string) {
 	l.Logger.Println(VerboseColor(msg))
 }
 
-func (l *LevelLogger) Verbose(msg string) {
-	l.Logger.Print(VerboseColor(msg))
-}
-
 func (l *LevelLogger) SuccessLn(msg string) {
 	l.Logger.Println(SuccessColor(msg))
 }
 
-func (l *LevelLogger) Success(msg string) {
-	l.Logger.Print(SuccessColor(msg))
-}
-
 func (l *LevelLogger) InfoLn(msg string) {
 	l.Logger.Println(InfoColor(msg))
-}
-
-func (l *LevelLogger) Info(msg string) {
-	l.Logger.Print(InfoColor(msg))
 }
 
 func (l *LevelLogger) DefaultLn(msg string) {
@@ -130,5 +110,5 @@ func (l *LevelLogger) DefaultLn(msg string) {
 }
 
 func (l *LevelLogger) Default(msg string) {
-	fmt.Print(msg)
+	_, _ = l.Writer().Write([]byte(msg))
 }
