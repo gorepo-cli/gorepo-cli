@@ -3,7 +3,6 @@ package systemutils
 import (
 	"fmt"
 	"github.com/fatih/color"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -33,11 +32,11 @@ func (fs *Fs) FileExists(path string) (exists bool) {
 }
 
 func (fs *Fs) WriteFile(path string, content []byte) (err error) {
-	return ioutil.WriteFile(path, content, 0644)
+	return os.WriteFile(path, content, 0644)
 }
 
 func (fs *Fs) ReadFile(path string) ([]byte, error) {
-	return ioutil.ReadFile(path)
+	return os.ReadFile(path)
 }
 
 type Exec struct{}
