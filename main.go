@@ -323,6 +323,8 @@ func (cmd *Commands) Init(c *cli.Context) error {
 		return errors.New("monorepo already exists at " + cmd.Config.Runtime.ROOT)
 	}
 
+	verbose := c.Bool("verbose")
+
 	rootConfig := RootConfig{
 		Name:     c.Args().Get(0),
 		Version:  "0.1.0",
@@ -361,13 +363,17 @@ func (cmd *Commands) Init(c *cli.Context) error {
 	// handle go workspace
 	if rootConfig.Strategy == "workspace" {
 		if exists := cmd.Config.GoWorkspaceExists(); !exists {
-			cmd.SystemUtils.Logger.VerboseLn("go workspace does not exist yet, running 'go work init'")
+			if verbose {
+				cmd.SystemUtils.Logger.VerboseLn("go workspace does not exist yet, running 'go work init'")
+			}
 			err := cmd.SystemUtils.Exec.GoCommand(cmd.Config.Runtime.ROOT, "work", "init")
 			if err != nil {
 				return err
 			}
 		} else {
-			cmd.SystemUtils.Logger.VerboseLn("go workspace already exists, no need to create one")
+			if verbose {
+				cmd.SystemUtils.Logger.VerboseLn("go workspace already exists, no need to create one")
+			}
 		}
 	} else if rootConfig.Strategy == "rewrite" {
 		return errors.New("rewrite strategy unsupported yet")
@@ -378,12 +384,14 @@ func (cmd *Commands) Init(c *cli.Context) error {
 	if err := cmd.Config.WriteRootConfig(rootConfig); err != nil {
 		return err
 	} else {
-		cmd.SystemUtils.Logger.VerboseLn("created monorepo configuration 'work.toml' at root")
+		if verbose {
+			cmd.SystemUtils.Logger.VerboseLn("created monorepo configuration 'work.toml' at root")
+		}
 	}
 
 	// todo: check existence of modules folder (go.mod) to sanitize everything (create module.toml and make sure they are in the workspace)
 
-	cmd.SystemUtils.Logger.SuccessLn("monorepo initialized at " + cmd.Config.Runtime.ROOT)
+	cmd.SystemUtils.Logger.SuccessLn("monorepo successfully initialized at " + cmd.Config.Runtime.ROOT)
 
 	return nil
 }
@@ -422,20 +430,30 @@ func (cmd *Commands) Run(c *cli.Context) error {
 		return errors.New("monorepo not found at " + cmd.Config.Runtime.ROOT)
 	}
 
+	verbose := c.Bool("verbose")
+
 	scriptName := c.Args().Get(0)
 
 	if scriptName == "" {
 		return errors.New("no script name provided, usage: gorepo run [script_name]")
 	} else {
-		cmd.SystemUtils.Logger.VerboseLn("running script '" + scriptName + "'")
+		if verbose {
+			cmd.SystemUtils.Logger.VerboseLn("running script '" + scriptName + "'")
+		}
 	}
 
 	allowMissing := c.Bool("allow-missing")
-	cmd.SystemUtils.Logger.VerboseLn("value for flag allowMissing: " + strconv.FormatBool(allowMissing))
+	if verbose {
+		cmd.SystemUtils.Logger.VerboseLn("value for flag allowMissing: " + strconv.FormatBool(allowMissing))
+	}
 	dryRun := c.Bool("dry-run")
-	cmd.SystemUtils.Logger.VerboseLn("value for flag dryRun:       " + strconv.FormatBool(dryRun))
+	if verbose {
+		cmd.SystemUtils.Logger.VerboseLn("value for flag dryRun:       " + strconv.FormatBool(dryRun))
+	}
 	targets := strings.Split(c.String("target"), ",")
-	cmd.SystemUtils.Logger.VerboseLn("value for flag target:       " + strings.Join(targets, ","))
+	if verbose {
+		cmd.SystemUtils.Logger.VerboseLn("value for flag target:       " + strings.Join(targets, ","))
+	}
 	for _, target := range targets {
 		if target == "root" && len(targets) > 1 {
 			return errors.New("cannot run script in root and in modules at the same time, you're being too fancy")
@@ -459,7 +477,9 @@ func (cmd *Commands) Run(c *cli.Context) error {
 		}
 
 		// check all modules have the script
-		cmd.SystemUtils.Logger.VerboseLn("checking if all modules have the script")
+		if verbose {
+			cmd.SystemUtils.Logger.VerboseLn("checking if all modules have the script")
+		}
 		var modulesWithoutScript []string
 		for _, module := range modules {
 			if _, ok := module.Scripts[scriptName]; !ok || module.Scripts[scriptName] == "" {
@@ -471,9 +491,13 @@ func (cmd *Commands) Run(c *cli.Context) error {
 		} else if len(modulesWithoutScript) > 0 && !allowMissing {
 			return errors.New("not running script, because it is missing in following modules '" + scriptName + "' :" + strings.Join(modulesWithoutScript, ", "))
 		} else if len(modulesWithoutScript) > 0 && allowMissing {
-			cmd.SystemUtils.Logger.VerboseLn("script is missing in following modules (but flag allowMissing was passed) '" + scriptName + "' :" + strings.Join(modulesWithoutScript, ", "))
+			if verbose {
+				cmd.SystemUtils.Logger.VerboseLn("script is missing in following modules (but flag allowMissing was passed) '" + scriptName + "' :" + strings.Join(modulesWithoutScript, ", "))
+			}
 		} else {
-			cmd.SystemUtils.Logger.VerboseLn("all modules have the script")
+			if verbose {
+				cmd.SystemUtils.Logger.VerboseLn("all modules have the script")
+			}
 		}
 
 		// execute them
