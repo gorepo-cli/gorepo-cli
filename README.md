@@ -77,7 +77,7 @@ is relevant to the actual commited version. Future development should be in ROAD
 
 ### Description
 
-Creates a monorepo at the current work directory
+Initialize a new monorepo at the working directory
 
 ### Usage
 
@@ -95,7 +95,7 @@ This command creates two primary files:
 
 ### Description
 
-Lists all modules in the monorepo
+List all modules of the monorepo
 
 ### Usage
 
@@ -111,7 +111,7 @@ This command lists all modules in the monorepo, formally a module is a folder wi
 
 ### Description
 
-Runs a script from a specified context
+Run a script for given targets
 
 ### Usage
 
@@ -136,7 +136,7 @@ Note it will run all or nothing. If one fails, it will not revert the operations
 
 ### Description
 
-Prints the version of the CLI
+Print the version of the CLI
 
 ### Usage
 

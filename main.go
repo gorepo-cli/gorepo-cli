@@ -609,18 +609,18 @@ func Run() (err error) {
 			},
 			{
 				Name:   "list",
-				Usage:  "List all modules in the monorepo",
+				Usage:  "List all modules of the monorepo",
 				Action: cmd.List,
 			},
 			{
 				Name:   "run",
-				Usage:  "Run a command in a given scope (all modules, some modules, at root)",
+				Usage:  "Run a script for given targets",
 				Action: cmd.Run,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "target",
 						Value: "all",
-						Usage: "Target root or specific modules (comma separated)",
+						Usage: "Target specific modules (comma separated)",
 					},
 					&cli.BoolFlag{
 						Name:  "allow-missing",
@@ -629,19 +629,24 @@ func Run() (err error) {
 					},
 					&cli.IntFlag{
 						Name:  "parallel",
-						Value: 2,
-						Usage: "Run scripts in parallel (default 3) NOT IMPLEMENTED",
+						Value: 1,
+						Usage: "NOT IMPLEMENTED - Sets number of scripts to run in parallel",
+					},
+					&cli.StringFlag{
+						Name:  "exclude",
+						Value: "",
+						Usage: "NOT IMPLEMENTED - Exclude specific modules (comma separated)",
 					},
 				},
 			},
 			{
 				Name:   "version",
-				Usage:  "Print the version of the monorepo",
+				Usage:  "Print the version of the CLI",
 				Action: cmd.Version,
 			},
 			{
 				Name:   "debug",
-				Usage:  "Gives information about the configuration",
+				Usage:  "Gives information about the configuration, for internal use and debugging",
 				Action: cmd.Debug,
 			},
 		},
@@ -654,7 +659,7 @@ func Run() (err error) {
 			&cli.BoolFlag{
 				Name:  "dry-run",
 				Value: false,
-				Usage: "Print the commands that would be executed - NOT IMPLEMENTED",
+				Usage: "NOT IMPLEMENTED - Print the commands that would be executed",
 			},
 		},
 	}
