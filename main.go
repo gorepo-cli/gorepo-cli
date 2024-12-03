@@ -250,7 +250,23 @@ func (c *Config) GoWorkspaceExists() bool {
 }
 
 // GetModules returns all modules in the monorepo in alphabetical order
-func (c *Config) GetModules() (modules []ModuleConfig, err error) {
+func (c *Config) GetModules(targets, exclude []string) (modules []ModuleConfig, err error) {
+	// validation
+	for _, target := range targets {
+		if target == "root" && len(targets) > 1 {
+			return nil, errors.New("cannot run script in root and in modules at the same time, you're being too greedy, run the command twice")
+		} else if target == "all" && len(targets) > 1 {
+			return nil, errors.New("cannot run script in all modules and in specific modules, non sense")
+		}
+	}
+	for _, excluded := range exclude {
+		if excluded == "all" {
+			return nil, errors.New("excluding all modules makes no sense")
+		} else if excluded == "root" {
+			return nil, errors.New("excluding root is the default behaviour, no need to specify it")
+		}
+	}
+	// walk
 	currentPath := c.Runtime.ROOT
 	err = filepath.Walk(currentPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -267,7 +283,9 @@ func (c *Config) GetModules() (modules []ModuleConfig, err error) {
 				if err != nil {
 					return err
 				}
-				modules = append(modules, moduleConfig)
+				if (targets[0] == "all" || contains(targets, moduleConfig.Name)) && !contains(exclude, moduleConfig.Name) {
+					modules = append(modules, moduleConfig)
+				}
 			}
 		}
 		return nil
@@ -401,7 +419,7 @@ func (cmd *Commands) List(c *cli.Context) error {
 	if exists := cmd.Config.RootConfigExists(); !exists {
 		return errors.New("monorepo not found at " + cmd.Config.Runtime.ROOT)
 	}
-	modules, err := cmd.Config.GetModules()
+	modules, err := cmd.Config.GetModules([]string{"all"}, []string{})
 	if err != nil {
 		return err
 	}
@@ -424,16 +442,18 @@ func contains(s []string, e string) bool {
 	return false
 }
 
-// Run implements `gorepo run`
-func (cmd *Commands) Run(c *cli.Context) error {
+// Execute implements `gorepo execute`
+func (cmd *Commands) Execute(c *cli.Context) error {
 	if exists := cmd.Config.RootConfigExists(); !exists {
 		return errors.New("monorepo not found at " + cmd.Config.Runtime.ROOT)
 	}
 
 	verbose := c.Bool("verbose")
+	if verbose {
+		cmd.SystemUtils.Logger.VerboseLn("verbose mode enabled")
+	}
 
 	scriptName := c.Args().Get(0)
-
 	if scriptName == "" {
 		return errors.New("no script name provided, usage: gorepo run [script_name]")
 	} else {
@@ -446,75 +466,69 @@ func (cmd *Commands) Run(c *cli.Context) error {
 	if verbose {
 		cmd.SystemUtils.Logger.VerboseLn("value for flag allowMissing: " + strconv.FormatBool(allowMissing))
 	}
-	dryRun := c.Bool("dry-run")
-	if verbose {
-		cmd.SystemUtils.Logger.VerboseLn("value for flag dryRun:       " + strconv.FormatBool(dryRun))
-	}
+
 	targets := strings.Split(c.String("target"), ",")
 	if verbose {
 		cmd.SystemUtils.Logger.VerboseLn("value for flag target:       " + strings.Join(targets, ","))
 	}
-	for _, target := range targets {
-		if target == "root" && len(targets) > 1 {
-			return errors.New("cannot run script in root and in modules at the same time, you're being too fancy")
+
+	exclude := strings.Split(c.String("exclude"), ",")
+	if verbose {
+		cmd.SystemUtils.Logger.VerboseLn("value for flag exclude:      " + strings.Join(exclude, ","))
+	}
+
+	// logic
+
+	if targets[0] == "root" {
+		cmd.SystemUtils.Logger.WarningLn("running script in root not supported yet")
+		// implement here and return
+		return nil
+	}
+
+	modules, err := cmd.Config.GetModules(targets, exclude)
+	if err != nil {
+		return err
+	}
+
+	if len(modules) == 0 {
+		return errors.New("no modules found")
+	}
+
+	// check all modules have the script
+	if verbose && !allowMissing {
+		cmd.SystemUtils.Logger.VerboseLn("checking if all modules have the script")
+	}
+	var modulesWithoutScript []string
+	for _, module := range modules {
+		if _, ok := module.Scripts[scriptName]; !ok || module.Scripts[scriptName] == "" {
+			modulesWithoutScript = append(modulesWithoutScript, module.Name)
+		}
+	}
+	if len(modulesWithoutScript) == len(modules) {
+		return errors.New("not running script, because it is missing in all modules")
+	} else if len(modulesWithoutScript) > 0 && !allowMissing {
+		return errors.New("not running script, because it is missing in following modules '" + scriptName + "' :" + strings.Join(modulesWithoutScript, ", "))
+	} else if len(modulesWithoutScript) > 0 && allowMissing {
+		if verbose {
+			cmd.SystemUtils.Logger.VerboseLn("script is missing in following modules (but flag allowMissing was passed) '" + scriptName + "' :" + strings.Join(modulesWithoutScript, ", "))
+		}
+	} else {
+		if verbose {
+			cmd.SystemUtils.Logger.VerboseLn("all modules have the script")
 		}
 	}
 
-	if targets[0] == "root" {
-		cmd.SystemUtils.Logger.VerboseLn("running script in root not supported yet")
-	} else {
-		allModules, err := cmd.Config.GetModules()
-		if err != nil {
+	// execute them
+	for _, module := range modules {
+		path := filepath.Join(cmd.Config.Runtime.ROOT, module.RelativePath)
+		script := module.Scripts[scriptName]
+		if script == "" {
+			cmd.SystemUtils.Logger.InfoLn("script is empty, skipping")
+			continue
+		}
+		cmd.SystemUtils.Logger.InfoLn("running script " + scriptName + " in module " + module.Name)
+		if err := cmd.SystemUtils.Exec.BashCommand(path, script); err != nil {
 			return err
-		}
-
-		var modules []ModuleConfig
-
-		for _, module := range allModules {
-			if targets[0] == "all" || contains(targets, module.Name) {
-				modules = append(modules, module)
-			}
-		}
-
-		// check all modules have the script
-		if verbose {
-			cmd.SystemUtils.Logger.VerboseLn("checking if all modules have the script")
-		}
-		var modulesWithoutScript []string
-		for _, module := range modules {
-			if _, ok := module.Scripts[scriptName]; !ok || module.Scripts[scriptName] == "" {
-				modulesWithoutScript = append(modulesWithoutScript, module.Name)
-			}
-		}
-		if len(modulesWithoutScript) == len(modules) {
-			return errors.New("not running script, because it is missing in all modules")
-		} else if len(modulesWithoutScript) > 0 && !allowMissing {
-			return errors.New("not running script, because it is missing in following modules '" + scriptName + "' :" + strings.Join(modulesWithoutScript, ", "))
-		} else if len(modulesWithoutScript) > 0 && allowMissing {
-			if verbose {
-				cmd.SystemUtils.Logger.VerboseLn("script is missing in following modules (but flag allowMissing was passed) '" + scriptName + "' :" + strings.Join(modulesWithoutScript, ", "))
-			}
-		} else {
-			if verbose {
-				cmd.SystemUtils.Logger.VerboseLn("all modules have the script")
-			}
-		}
-
-		// execute them
-		for _, module := range modules {
-			path := filepath.Join(cmd.Config.Runtime.ROOT, module.RelativePath)
-			script := module.Scripts[scriptName]
-			if script == "" {
-				cmd.SystemUtils.Logger.InfoLn("script is empty, skipping")
-				continue
-			}
-			cmd.SystemUtils.Logger.InfoLn("running script " + scriptName + " in module " + module.Name)
-			if dryRun {
-				continue
-			}
-			if err := cmd.SystemUtils.Exec.BashCommand(path, script); err != nil {
-				return err
-			}
 		}
 	}
 
@@ -562,7 +576,7 @@ func (cmd *Commands) Debug(c *cli.Context) error {
 		cmd.SystemUtils.Logger.DefaultLn("STRATEGY......" + cfg.Strategy)
 		cmd.SystemUtils.Logger.DefaultLn("VENDOR........" + strconv.FormatBool(cfg.Vendor))
 
-		modules, err := cmd.Config.GetModules()
+		modules, err := cmd.Config.GetModules([]string{"all"}, []string{})
 		if err != nil {
 			return err
 		}
@@ -590,14 +604,36 @@ func (cmd *Commands) Debug(c *cli.Context) error {
 	return nil
 }
 
-// Run runs the CLI application
-func Run() (err error) {
+// Cli runs the CLI application
+func Cli() (err error) {
 	su := NewSystemUtils(&Fs{}, &Exec{}, *NewLevelLogger())
 	cfg, err := NewConfig(su)
 	if err != nil {
 		return err
 	}
 	cmd := NewCommands(su, cfg)
+	executionFlags := []cli.Flag{
+		&cli.StringFlag{
+			Name:  "target",
+			Value: "all",
+			Usage: "Target specific modules (comma separated)",
+		},
+		&cli.StringFlag{
+			Name:  "exclude",
+			Value: "",
+			Usage: "Exclude specific modules (comma separated)",
+		},
+		&cli.BoolFlag{
+			Name:  "allow-missing",
+			Value: false,
+			Usage: "Allow executing the scripts, even if some module don't have it",
+		},
+		&cli.IntFlag{
+			Name:  "parallel",
+			Value: 1,
+			Usage: "NOT IMPLEMENTED - Sets number of scripts to run in parallel",
+		},
+	}
 	app := &cli.App{
 		Name:  "GOREPO",
 		Usage: "A CLI tool to manage Go monorepos",
@@ -608,36 +644,52 @@ func Run() (err error) {
 				Action: cmd.Init,
 			},
 			{
+				Name:  "add",
+				Usage: "NOT IMPLEMENTED - Add a new module to the monorepo",
+			},
+			{
 				Name:   "list",
 				Usage:  "List all modules of the monorepo",
 				Action: cmd.List,
 			},
 			{
-				Name:   "run",
-				Usage:  "Run a script for given targets",
-				Action: cmd.Run,
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:  "target",
-						Value: "all",
-						Usage: "Target specific modules (comma separated)",
-					},
-					&cli.BoolFlag{
-						Name:  "allow-missing",
-						Value: false,
-						Usage: "Run the scripts in the modules that have it, even if it is missing in some",
-					},
-					&cli.IntFlag{
-						Name:  "parallel",
-						Value: 1,
-						Usage: "NOT IMPLEMENTED - Sets number of scripts to run in parallel",
-					},
-					&cli.StringFlag{
-						Name:  "exclude",
-						Value: "",
-						Usage: "NOT IMPLEMENTED - Exclude specific modules (comma separated)",
-					},
-				},
+				Name:   "execute",
+				Usage:  "Execute a script across targeted modules",
+				Action: cmd.Execute,
+				Flags:  executionFlags,
+			},
+			{
+				Name:  "fmtci",
+				Usage: "NOT IMPLEMENTED - Breaks if targeted modules are not formatted",
+				Flags: executionFlags,
+			},
+			{
+				Name:  "vetci",
+				Usage: "NOT IMPLEMENTED - Breaks if targeted modules have vet issues",
+				Flags: executionFlags,
+			},
+			{
+				Name:  "fmt",
+				Usage: "NOT IMPLEMENTED - Run 'go fmt' in targeted modules - can be overridden by a script",
+				Flags: executionFlags,
+			},
+			{
+				Name:  "vet",
+				Usage: "NOT IMPLEMENTED - Run 'go vet' in targeted modules - can be overridden by a script",
+				Flags: executionFlags,
+			},
+			{
+				Name:  "test",
+				Usage: "NOT IMPLEMENTED - Run 'go test' in targeted modules - can be overridden by a script",
+				Flags: executionFlags,
+			},
+			{
+				Name:  "build",
+				Usage: "NOT IMPLEMENTED - Run 'go build' in targeted modules - can be overridden by a script",
+			},
+			{
+				Name:  "run",
+				Usage: "NOT IMPLEMENTED - Run 'go run' in targeted modules - can be overridden by a script",
 			},
 			{
 				Name:   "version",
@@ -659,7 +711,7 @@ func Run() (err error) {
 			&cli.BoolFlag{
 				Name:  "dry-run",
 				Value: false,
-				Usage: "NOT IMPLEMENTED - Print the commands that would be executed",
+				Usage: "NOT IMPLEMENTED - Print the commands that would be executed without executing them",
 			},
 		},
 	}
@@ -669,7 +721,7 @@ func Run() (err error) {
 // main is the entry point
 func main() {
 	su := NewSystemUtils(&Fs{}, &Exec{}, *NewLevelLogger())
-	if err := Run(); err != nil {
+	if err := Cli(); err != nil {
 		su.Logger.FatalLn(err.Error())
 		os.Exit(1)
 	}

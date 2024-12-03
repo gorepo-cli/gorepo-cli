@@ -107,23 +107,23 @@ gorepo list
 
 This command lists all modules in the monorepo, formally a module is a folder with a `module.toml` file in it.
 
-## gorepo run
+## gorepo execute
 
 ### Description
 
-Run a script for given targets
+Execute a script across targeted modules
 
 ### Usage
 
 ```
-gorepo run [--target] [--dry-run] [--allow-missing] [script]
+gorepo execute [--target] [--exclude] [--allow-missing] [script_name]
 ```
 
 ### Parameters
 
-- `script`: the name of the script to run
-- `--target` (optional): the name of the comma-separated module(s) to run the script in, examples: `--target=root`, `--target=mod1,mod2`
-- `--dry-run` (optional): prints the command that would be run without actually running it
+- `script_name`: the name of the script to execute
+- `--target` (optional): comma-separated names of modules to target, examples: `--target=mod1,mod2`
+- `--exclude` (optional): comma-separated names of modules to exclude
 - `--allow-missing` (optional): allows the script to run even if some of the targets does not have the script
 
 ### Behaviour
