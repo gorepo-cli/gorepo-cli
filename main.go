@@ -535,6 +535,90 @@ func (cmd *Commands) Execute(c *cli.Context) error {
 	return nil
 }
 
+// FmtCI implements `gorepo fmt-ci`
+func (cmd *Commands) FmtCI(c *cli.Context) error {
+	if exists := cmd.Config.RootConfigExists(); !exists {
+		return errors.New("monorepo not found at " + cmd.Config.Runtime.ROOT)
+	}
+
+	verbose := c.Bool("verbose")
+	if verbose {
+		cmd.SystemUtils.Logger.VerboseLn("verbose mode enabled")
+	}
+
+	targets := strings.Split(c.String("target"), ",")
+	if verbose {
+		cmd.SystemUtils.Logger.VerboseLn("value for flag target:       " + strings.Join(targets, ","))
+	}
+
+	exclude := strings.Split(c.String("exclude"), ",")
+	if verbose {
+		cmd.SystemUtils.Logger.VerboseLn("value for flag exclude:      " + strings.Join(exclude, ","))
+	}
+
+	if targets[0] == "root" {
+		return errors.New("running fmt in root is not supported")
+	}
+
+	modules, err := cmd.Config.GetModules(targets, exclude)
+	if err != nil {
+		return err
+	}
+
+	script := "if [ -n \"$(gofmt -l .)\" ]; then exit 1; fi"
+
+	for _, module := range modules {
+		path := filepath.Join(cmd.Config.Runtime.ROOT, module.RelativePath)
+		if err := cmd.SystemUtils.Exec.BashCommand(path, script); err != nil {
+			return errors.New("fmt failed in module " + module.Name)
+		}
+	}
+
+	return nil
+}
+
+// VetCI implements `gorepo vet-ci`
+func (cmd *Commands) VetCI(c *cli.Context) error {
+	if exists := cmd.Config.RootConfigExists(); !exists {
+		return errors.New("monorepo not found at " + cmd.Config.Runtime.ROOT)
+	}
+
+	verbose := c.Bool("verbose")
+	if verbose {
+		cmd.SystemUtils.Logger.VerboseLn("verbose mode enabled")
+	}
+
+	targets := strings.Split(c.String("target"), ",")
+	if verbose {
+		cmd.SystemUtils.Logger.VerboseLn("value for flag target:       " + strings.Join(targets, ","))
+	}
+
+	exclude := strings.Split(c.String("exclude"), ",")
+	if verbose {
+		cmd.SystemUtils.Logger.VerboseLn("value for flag exclude:      " + strings.Join(exclude, ","))
+	}
+
+	if targets[0] == "root" {
+		return errors.New("running fmt in root is not supported")
+	}
+
+	modules, err := cmd.Config.GetModules(targets, exclude)
+	if err != nil {
+		return err
+	}
+
+	script := "go vet . 2>&1 | grep -q . && exit 1"
+
+	for _, module := range modules {
+		path := filepath.Join(cmd.Config.Runtime.ROOT, module.RelativePath)
+		if err := cmd.SystemUtils.Exec.BashCommand(path, script); err != nil {
+			return errors.New("vet failed in module " + module.Name)
+		}
+	}
+
+	return nil
+}
+
 // version is injected at build time
 var version = "dev"
 
@@ -659,14 +743,16 @@ func Cli() (err error) {
 				Flags:  executionFlags,
 			},
 			{
-				Name:  "fmtci",
-				Usage: "NOT IMPLEMENTED - Breaks if targeted modules are not formatted",
-				Flags: executionFlags,
+				Name:   "fmt-ci",
+				Usage:  "Breaks if targeted modules are not formatted",
+				Action: cmd.FmtCI,
+				Flags:  executionFlags,
 			},
 			{
-				Name:  "vetci",
-				Usage: "NOT IMPLEMENTED - Breaks if targeted modules have vet issues",
-				Flags: executionFlags,
+				Name:   "vet-ci",
+				Usage:  "NOT TESTED - Breaks if targeted modules have vet issues",
+				Action: cmd.VetCI,
+				Flags:  executionFlags,
 			},
 			{
 				Name:  "fmt",
