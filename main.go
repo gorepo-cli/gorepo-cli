@@ -36,6 +36,7 @@ type FsI interface {
 	Exists(path string) bool
 	Read(path string) ([]byte, error)
 	Write(path string, content []byte) error
+	Walk(root string, walkFn filepath.WalkFunc) error
 }
 
 // Fs implements FsI
@@ -54,6 +55,10 @@ func (fs *Fs) Read(path string) ([]byte, error) {
 
 func (fs *Fs) Write(path string, content []byte) (err error) {
 	return os.WriteFile(path, content, 0644)
+}
+
+func (fs *Fs) Walk(root string, walkFn filepath.WalkFunc) (err error) {
+	return filepath.Walk(root, walkFn)
 }
 
 // ExecI defines methods to run commands
@@ -268,7 +273,7 @@ func (c *Config) GetModules(targets, exclude []string) (modules []ModuleConfig, 
 	}
 	// walk
 	currentPath := c.Runtime.ROOT
-	err = filepath.Walk(currentPath, func(path string, info os.FileInfo, err error) error {
+	err = c.su.Fs.Walk(currentPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
