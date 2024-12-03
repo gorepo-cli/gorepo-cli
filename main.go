@@ -20,7 +20,7 @@ import (
 type SystemUtils struct {
 	Fs     FsI
 	Exec   ExecI
-	Logger Llog
+	Logger LlogI
 }
 
 func NewSystemUtils(fs FsI, x ExecI, l Llog) SystemUtils {
@@ -98,10 +98,22 @@ func (x *Exec) BashCommand(absolutePath, script string) (err error) {
 	return nil
 }
 
+type LlogI interface {
+	FatalLn(msg string)
+	WarningLn(msg string)
+	VerboseLn(msg string)
+	SuccessLn(msg string)
+	InfoLn(msg string)
+	DefaultLn(msg string)
+	Default(msg string)
+}
+
 // Llog is a logger that can log different levels
 type Llog struct {
 	*log.Logger
 }
+
+var _ LlogI = &Llog{}
 
 var (
 	FatalColor   = color.New(color.FgRed).SprintFunc()
@@ -115,31 +127,31 @@ func NewLevelLogger() *Llog {
 	return &Llog{Logger: log.New(os.Stdout, "", 0)}
 }
 
-func (l *Llog) FatalLn(msg string) {
+func (l Llog) FatalLn(msg string) {
 	l.Println(FatalColor(msg))
 }
 
-func (l *Llog) WarningLn(msg string) {
+func (l Llog) WarningLn(msg string) {
 	l.Logger.Println(WarningColor(msg))
 }
 
-func (l *Llog) VerboseLn(msg string) {
+func (l Llog) VerboseLn(msg string) {
 	l.Logger.Println(VerboseColor(msg))
 }
 
-func (l *Llog) SuccessLn(msg string) {
+func (l Llog) SuccessLn(msg string) {
 	l.Logger.Println(SuccessColor(msg))
 }
 
-func (l *Llog) InfoLn(msg string) {
+func (l Llog) InfoLn(msg string) {
 	l.Logger.Println(InfoColor(msg))
 }
 
-func (l *Llog) DefaultLn(msg string) {
+func (l Llog) DefaultLn(msg string) {
 	l.Logger.Println(msg)
 }
 
-func (l *Llog) Default(msg string) {
+func (l Llog) Default(msg string) {
 	_, _ = l.Writer().Write([]byte(msg))
 }
 
@@ -163,7 +175,30 @@ type RuntimeConfig struct {
 	ROOT string // Root of the monorepo
 }
 
+type RootManipulation interface {
+	RootConfigExists() bool
+	LoadRootConfig() (cfg RootConfig, err error)
+	WriteRootConfig(rootConfig RootConfig) (err error)
+}
+
+var _ RootManipulation = &Config{}
+
+type ModuleManipulation interface {
+	GetModules(targets, exclude []string) (modules []ModuleConfig, err error)
+	LoadModuleConfig(relativePath string) (cfg ModuleConfig, err error)
+	WriteModuleConfig(modConfig ModuleConfig, relativePath, name string) (err error)
+}
+
+var _ ModuleManipulation = &Config{}
+
+type ConfigHelpers interface {
+	GoWorkspaceExists() bool
+}
+
+var _ ConfigHelpers = &Config{}
+
 func NewConfig(su SystemUtils) (cfg Config, err error) {
+	//todo: extract side effects
 	cfg.Static = StaticConfig{
 		MaxRecursion:   7,
 		RootFileName:   "work.toml",
