@@ -7,6 +7,34 @@ import (
 	"strings"
 )
 
+type TestKit struct {
+	MockLogger *MockLogger
+	MockFs     *MockFs
+	MockExec   *MockExec
+	su         *SystemUtils
+	cfg        *Config
+	cmd        *Commands
+}
+
+func NewTestKit(root, wd string, files map[string][]byte) (tk TestKit, err error) {
+	mockFs := NewMockFs(files)
+	mockExec := NewMockExec()
+	mockLogger := NewMockLogger()
+	su := NewSystemUtils(mockFs, mockExec, &mockLogger)
+	cfg, err := NewMockConfig(su, root, wd)
+	if err != nil {
+		return TestKit{}, err
+	}
+	return TestKit{
+		MockLogger: &mockLogger,
+		MockFs:     &mockFs,
+		MockExec:   &mockExec,
+		su:         &su,
+		cfg:        &cfg,
+		cmd:        NewCommands(su, cfg),
+	}, nil
+}
+
 func NewMockConfig(su SystemUtils, root, wd string) (cfg Config, err error) {
 	cfg.Static = StaticConfig{
 		MaxRecursion:   7,
@@ -25,30 +53,30 @@ type MockFs struct {
 	Files map[string][]byte
 }
 
-func NewMockFs() *MockFs {
-	return &MockFs{
-		Files: map[string][]byte{},
+func NewMockFs(files map[string][]byte) MockFs {
+	return MockFs{
+		Files: files,
 	}
 }
 
-func (m *MockFs) Exists(path string) bool {
+func (m MockFs) Exists(path string) bool {
 	_, exists := m.Files[path]
 	return exists
 }
 
-func (m *MockFs) Read(path string) ([]byte, error) {
+func (m MockFs) Read(path string) ([]byte, error) {
 	if data, exists := m.Files[path]; exists {
 		return data, nil
 	}
 	return nil, os.ErrNotExist
 }
 
-func (m *MockFs) Write(path string, content []byte) error {
+func (m MockFs) Write(path string, content []byte) error {
 	m.Files[path] = content
 	return nil
 }
 
-func (m *MockFs) Walk(root string, walkFn filepath.WalkFunc) error {
+func (m MockFs) Walk(root string, walkFn filepath.WalkFunc) error {
 	//for path := range m.Files {
 	//	info := mockFileInfo{
 	//		name:    filepath.Base(path),
@@ -88,7 +116,7 @@ func (mockTime) String() string         { return "mockTime" }
 func (mockTime) IsZero() bool           { return true }
 func (mockTime) Before(t mockTime) bool { return false }
 
-func (m *MockFs) Output(path string, perm os.FileMode) map[string][]byte {
+func (m MockFs) Output(path string, perm os.FileMode) map[string][]byte {
 	return m.Files
 }
 
@@ -99,8 +127,8 @@ type MockExec struct {
 	Commands []MockCommand
 }
 
-func NewMockExec() *MockExec {
-	return &MockExec{
+func NewMockExec() MockExec {
+	return MockExec{
 		Commands: []MockCommand{},
 	}
 }
@@ -112,7 +140,7 @@ type MockCommand struct {
 	Err     error
 }
 
-func (m *MockExec) GoCommand(dir string, args ...string) error {
+func (m MockExec) GoCommand(dir string, args ...string) error {
 	cmd := strings.Join(args, " ")
 	m.Commands = append(m.Commands, MockCommand{
 		Dir:     dir,
@@ -121,7 +149,7 @@ func (m *MockExec) GoCommand(dir string, args ...string) error {
 	return nil
 }
 
-func (m *MockExec) BashCommand(absolutePath, script string) error {
+func (m MockExec) BashCommand(absolutePath, script string) error {
 	m.Commands = append(m.Commands, MockCommand{
 		Dir:     absolutePath,
 		Command: script,
@@ -129,7 +157,7 @@ func (m *MockExec) BashCommand(absolutePath, script string) error {
 	return nil
 }
 
-func (m *MockExec) Output() []MockCommand {
+func (m MockExec) Output() []MockCommand {
 	return m.Commands
 }
 

@@ -7,21 +7,15 @@ import (
 
 func TestCommandVersion(t *testing.T) {
 	t.Run("should return the version", func(t *testing.T) {
-		mockLogger := NewMockLogger()
-		su := NewSystemUtils(NewMockFs(), &MockExec{}, &mockLogger)
-		cfg, err := NewMockConfig(su, "/root", "/root")
+		tk, err := NewTestKit("/root", "/root", nil)
 		if err != nil {
 			t.Fatal(err)
 		}
+		err = tk.cmd.Version(&cli.Context{})
 		if err != nil {
 			t.Fatal(err)
 		}
-		cmd := NewCommands(su, cfg)
-		err = cmd.Version(&cli.Context{})
-		if err != nil {
-			t.Fatal(err)
-		}
-		logs := mockLogger.Output()
+		logs := tk.MockLogger.Output()
 		if logs[0] != "DEFAULT: dev" {
 			t.Fatalf("Expected %s, got %s", "dev", logs[0])
 		}
