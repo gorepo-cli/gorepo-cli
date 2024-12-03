@@ -151,16 +151,3 @@ Contributions are welcome, please open an issue or submit a pull request.
 ## License
 
 This project is licensed under the MIT License.
-
-# Releases
-
-- v0.1.1: Initial release
-  - implemented gorepo init
-  - implemented gorepo list
-  - implemented gorepo run
-  - implemented gorepo version
-- v0.1.2:
-  - renamed gorepo run to gorepo execute
-  - added gorepo execute --exclude [script_name]
-  - implemented fmt-ci
-  - implemented vet-ci
