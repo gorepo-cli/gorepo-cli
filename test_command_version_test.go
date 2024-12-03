@@ -8,14 +8,11 @@ import (
 func TestCommandVersion(t *testing.T) {
 	t.Run("should return the version", func(t *testing.T) {
 		mockLogger := NewMockLogger()
-		su := SystemUtils{
-			Fs: &MockFs{
-				Files: map[string][]byte{},
-			},
-			Exec:   &MockExec{},
-			Logger: &mockLogger,
+		su := NewSystemUtils(NewMockFs(), &MockExec{}, &mockLogger)
+		cfg, err := NewMockConfig(su, "/root", "/root")
+		if err != nil {
+			t.Fatal(err)
 		}
-		cfg, err := NewConfig(su)
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -23,7 +23,7 @@ type SystemUtils struct {
 	Logger LlogI
 }
 
-func NewSystemUtils(fs FsI, x ExecI, l Llog) SystemUtils {
+func NewSystemUtils(fs FsI, x ExecI, l LlogI) SystemUtils {
 	return SystemUtils{
 		Fs:     fs,
 		Exec:   x,

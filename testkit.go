@@ -7,13 +7,6 @@ import (
 	"strings"
 )
 
-func NewMockSystemUtils(fs MockFs, x MockExec, l MockLogger) (su SystemUtils, err error) {
-	su.Fs = &fs
-	su.Exec = &x
-	su.Logger = &l
-	return su, nil
-}
-
 func NewMockConfig(su SystemUtils, root, wd string) (cfg Config, err error) {
 	cfg.Static = StaticConfig{
 		MaxRecursion:   7,
