@@ -839,6 +839,11 @@ func Cli() (err error) {
 				Value: false,
 				Usage: "NOT IMPLEMENTED - Print the commands that would be executed without executing them",
 			},
+			&cli.BoolFlag{
+				Name: "experimental",
+				Value: false,
+				Usage: "Experiment new features",
+			},
 		},
 	}
 	return app.Run(os.Args)
