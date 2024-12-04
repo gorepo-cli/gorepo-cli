@@ -21,13 +21,15 @@ type SystemUtils struct {
 	Fs     FsI
 	Exec   ExecI
 	Logger LlogI
+	Os     OsI
 }
 
-func NewSystemUtils(fs FsI, x ExecI, l LlogI) SystemUtils {
+func NewSystemUtils(fs FsI, x ExecI, l LlogI, o OsI) SystemUtils {
 	return SystemUtils{
 		Fs:     fs,
 		Exec:   x,
 		Logger: l,
+		Os:     o,
 	}
 }
 
@@ -155,6 +157,18 @@ func (l Llog) Default(msg string) {
 	_, _ = l.Writer().Write([]byte(msg))
 }
 
+type OsI interface {
+	GetWd() (dir string, err error)
+}
+
+type Os struct{}
+
+var _ OsI = &Os{}
+
+func (o *Os) GetWd() (dir string, err error) {
+	return os.Getwd()
+}
+
 // Config contains and manages configuration for the monorepo
 type Config struct {
 	Static  StaticConfig
@@ -198,7 +212,6 @@ type ConfigHelpers interface {
 var _ ConfigHelpers = &Config{}
 
 func NewConfig(su SystemUtils) (cfg Config, err error) {
-	//todo: extract side effects
 	cfg.Static = StaticConfig{
 		MaxRecursion:   7,
 		RootFileName:   "work.toml",
@@ -206,7 +219,7 @@ func NewConfig(su SystemUtils) (cfg Config, err error) {
 	}
 	cfg.Runtime = RuntimeConfig{}
 	cfg.su = su
-	if wd, err := os.Getwd(); err == nil {
+	if wd, err := su.Os.GetWd(); err == nil {
 		cfg.Runtime.WD = wd
 	} else {
 		return cfg, err
@@ -730,7 +743,7 @@ func (cmd *Commands) Debug(c *cli.Context) error {
 
 // Cli runs the CLI application
 func Cli() (err error) {
-	su := NewSystemUtils(&Fs{}, &Exec{}, *NewLevelLogger())
+	su := NewSystemUtils(&Fs{}, &Exec{}, *NewLevelLogger(), &Os{})
 	cfg, err := NewConfig(su)
 	if err != nil {
 		return err
@@ -818,7 +831,7 @@ func Cli() (err error) {
 
 // main is the entry point
 func main() {
-	su := NewSystemUtils(&Fs{}, &Exec{}, *NewLevelLogger())
+	su := NewSystemUtils(&Fs{}, &Exec{}, *NewLevelLogger(), &Os{})
 	if err := Cli(); err != nil {
 		su.Logger.FatalLn(err.Error())
 		os.Exit(1)

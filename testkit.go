@@ -11,17 +11,19 @@ type TestKit struct {
 	MockLogger *MockLogger
 	MockFs     *MockFs
 	MockExec   *MockExec
+	MockOs     *MockOs
 	su         *SystemUtils
 	cfg        *Config
 	cmd        *Commands
 }
 
-func NewTestKit(root, wd string, files map[string][]byte) (tk TestKit, err error) {
+func NewTestKit(wd string, files map[string][]byte) (tk TestKit, err error) {
 	mockFs := NewMockFs(files)
 	mockExec := NewMockExec()
 	mockLogger := NewMockLogger()
-	su := NewSystemUtils(mockFs, mockExec, &mockLogger)
-	cfg, err := NewMockConfig(su, root, wd)
+	mockOs := NewMockOs(wd)
+	su := NewSystemUtils(mockFs, mockExec, &mockLogger, mockOs)
+	cfg, err := NewConfig(su)
 	if err != nil {
 		return TestKit{}, err
 	}
@@ -29,24 +31,11 @@ func NewTestKit(root, wd string, files map[string][]byte) (tk TestKit, err error
 		MockLogger: &mockLogger,
 		MockFs:     &mockFs,
 		MockExec:   &mockExec,
+		MockOs:     mockOs,
 		su:         &su,
 		cfg:        &cfg,
 		cmd:        NewCommands(su, cfg),
 	}, nil
-}
-
-func NewMockConfig(su SystemUtils, root, wd string) (cfg Config, err error) {
-	cfg.Static = StaticConfig{
-		MaxRecursion:   7,
-		RootFileName:   "work.toml",
-		ModuleFileName: "module.toml",
-	}
-	cfg.Runtime = RuntimeConfig{
-		WD:   wd,
-		ROOT: root,
-	}
-	cfg.su = su
-	return cfg, nil
 }
 
 type MockFs struct {
@@ -203,4 +192,18 @@ func (l *MockLogger) Default(msg string) {
 
 func (l *MockLogger) Output() []string {
 	return l.Messages
+}
+
+/////////////////////////////////////////////////////////////////
+
+type MockOs struct {
+	Wd string
+}
+
+func (m MockOs) GetWd() (string, error) {
+	return m.Wd, nil
+}
+
+func NewMockOs(wd string) *MockOs {
+	return &MockOs{Wd: wd}
 }
