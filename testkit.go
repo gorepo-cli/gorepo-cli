@@ -32,8 +32,8 @@ func NewTestKit(wd string, files map[string][]byte) (tk TestKit, err error) {
 		MockFs:     &mockFs,
 		MockExec:   &mockExec,
 		MockOs:     mockOs,
-		su:         &su,
-		cfg:        &cfg,
+		su:         su,
+		cfg:        cfg,
 		cmd:        NewCommands(su, cfg),
 	}, nil
 }

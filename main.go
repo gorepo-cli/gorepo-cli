@@ -16,7 +16,7 @@ import (
 	"strings"
 )
 
-// SystemUtils contains utilities that interact with the system
+// SystemUtils contains utilities to interact with the system
 type SystemUtils struct {
 	Fs     FsI
 	Exec   ExecI
@@ -24,8 +24,9 @@ type SystemUtils struct {
 	Os     OsI
 }
 
-func NewSystemUtils(fs FsI, x ExecI, l LlogI, o OsI) SystemUtils {
-	return SystemUtils{
+// NewSystemUtils returns an instance of SystemUtils
+func NewSystemUtils(fs FsI, x ExecI, l LlogI, o OsI) *SystemUtils {
+	return &SystemUtils{
 		Fs:     fs,
 		Exec:   x,
 		Logger: l,
@@ -46,19 +47,23 @@ type Fs struct{}
 
 var _ FsI = &Fs{}
 
+// Exists checks if a file exists
 func (fs *Fs) Exists(path string) (exists bool) {
 	_, err := os.Stat(path)
 	return err == nil
 }
 
+// Read reads and return a file
 func (fs *Fs) Read(path string) ([]byte, error) {
 	return os.ReadFile(path)
 }
 
+// Write writes content to a file
 func (fs *Fs) Write(path string, content []byte) (err error) {
 	return os.WriteFile(path, content, 0644)
 }
 
+// Walk walks the filesystem
 func (fs *Fs) Walk(root string, walkFn filepath.WalkFunc) (err error) {
 	return filepath.Walk(root, walkFn)
 }
@@ -100,6 +105,7 @@ func (x *Exec) BashCommand(absolutePath, script string) (err error) {
 	return nil
 }
 
+// LlogI defines methods to log messages
 type LlogI interface {
 	FatalLn(msg string)
 	WarningLn(msg string)
@@ -110,12 +116,17 @@ type LlogI interface {
 	Default(msg string)
 }
 
-// Llog is a logger that can log different levels
+// Llog implements LlogI
 type Llog struct {
 	*log.Logger
 }
 
 var _ LlogI = &Llog{}
+
+// NewLevelLogger returns an instance of Llog
+func NewLevelLogger() *Llog {
+	return &Llog{Logger: log.New(os.Stdout, "", 0)}
+}
 
 var (
 	FatalColor   = color.New(color.FgRed).SprintFunc()
@@ -125,70 +136,70 @@ var (
 	InfoColor    = color.New(color.FgCyan).SprintFunc()
 )
 
-func NewLevelLogger() *Llog {
-	return &Llog{Logger: log.New(os.Stdout, "", 0)}
-}
-
-func (l Llog) FatalLn(msg string) {
+func (l *Llog) FatalLn(msg string) {
 	l.Println(FatalColor(msg))
 }
 
-func (l Llog) WarningLn(msg string) {
+func (l *Llog) WarningLn(msg string) {
 	l.Logger.Println(WarningColor(msg))
 }
 
-func (l Llog) VerboseLn(msg string) {
+func (l *Llog) VerboseLn(msg string) {
 	l.Logger.Println(VerboseColor(msg))
 }
 
-func (l Llog) SuccessLn(msg string) {
+func (l *Llog) SuccessLn(msg string) {
 	l.Logger.Println(SuccessColor(msg))
 }
 
-func (l Llog) InfoLn(msg string) {
+func (l *Llog) InfoLn(msg string) {
 	l.Logger.Println(InfoColor(msg))
 }
 
-func (l Llog) DefaultLn(msg string) {
+func (l *Llog) DefaultLn(msg string) {
 	l.Logger.Println(msg)
 }
 
-func (l Llog) Default(msg string) {
+func (l *Llog) Default(msg string) {
 	_, _ = l.Writer().Write([]byte(msg))
 }
 
+// OsI defines methods to interact with the operating system
 type OsI interface {
 	GetWd() (dir string, err error)
 }
 
+// Os implements OsI
 type Os struct{}
 
 var _ OsI = &Os{}
 
+// GetWd returns the working directory
 func (o *Os) GetWd() (dir string, err error) {
 	return os.Getwd()
 }
 
-// Config contains and manages configuration for the monorepo
+// Config contains configuration of the monorepo
 type Config struct {
 	Static  StaticConfig
 	Runtime RuntimeConfig
-	su      SystemUtils
+	su      *SystemUtils
 }
 
-// StaticConfig contains the static configuration of the monorepo
+// StaticConfig contains static configuration of the monorepo
 type StaticConfig struct {
 	MaxRecursion   int    // Max recursion depth to search for monorepo root
 	RootFileName   string // File name to identify the monorepo
 	ModuleFileName string // File name to identify a module
 }
 
-// RuntimeConfig contains the runtime configuration of the monorepo
+// RuntimeConfig contains runtime variables
 type RuntimeConfig struct {
 	WD   string // Working directory, folder where cli was executed
 	ROOT string // Root of the monorepo
 }
 
+// RootManipulation defines methods to manipulate the root configuration
 type RootManipulation interface {
 	RootConfigExists() bool
 	LoadRootConfig() (cfg RootConfig, err error)
@@ -197,6 +208,7 @@ type RootManipulation interface {
 
 var _ RootManipulation = &Config{}
 
+// ModuleManipulation defines methods to manipulate the module configuration
 type ModuleManipulation interface {
 	GetModules(targets, exclude []string) (modules []ModuleConfig, err error)
 	LoadModuleConfig(relativePath string) (cfg ModuleConfig, err error)
@@ -205,13 +217,16 @@ type ModuleManipulation interface {
 
 var _ ModuleManipulation = &Config{}
 
+// ConfigHelpers defines methods to help with the configuration
 type ConfigHelpers interface {
 	GoWorkspaceExists() bool
 }
 
 var _ ConfigHelpers = &Config{}
 
-func NewConfig(su SystemUtils) (cfg Config, err error) {
+// NewConfig returns an instance of Config
+func NewConfig(su *SystemUtils) (cfg *Config, err error) {
+	cfg = &Config{}
 	cfg.Static = StaticConfig{
 		MaxRecursion:   7,
 		RootFileName:   "work.toml",
@@ -232,7 +247,7 @@ func NewConfig(su SystemUtils) (cfg Config, err error) {
 	return cfg, nil
 }
 
-func getRootPath(cfg Config) (root string, err error) {
+func getRootPath(cfg *Config) (root string, err error) {
 	currentDir := cfg.Runtime.WD
 	if currentDir == "" {
 		return "", fmt.Errorf("no working directory")
@@ -255,8 +270,8 @@ func getRootPath(cfg Config) (root string, err error) {
 type RootConfig struct {
 	Name     string            `toml:"name"`
 	Version  string            `toml:"version"`
-	Strategy string            `toml:"strategy"` // workspace / rewrites (unsupported yet)
-	Vendor   bool              `toml:"vendor"`   // vendor or not
+	Strategy string            `toml:"strategy"` // workspace / rewrites (unsupported)
+	Vendor   bool              `toml:"vendor"`   // vendor or not (unsupported)
 	Scripts  map[string]string `toml:"scripts"`
 }
 
@@ -375,18 +390,23 @@ func (c *Config) WriteModuleConfig(modConfig ModuleConfig, relativePath, name st
 	return nil
 }
 
-// Commands contains the CLI commands
+// Commands contains the actual CLI commands
 type Commands struct {
-	SystemUtils SystemUtils
-	Config      Config
+	SystemUtils *SystemUtils
+	Config      *Config
 }
 
-func NewCommands(su SystemUtils, cfg Config) *Commands {
+// NewCommands returns an instance of Commands
+func NewCommands(su *SystemUtils, cfg *Config) *Commands {
 	return &Commands{
 		SystemUtils: su,
 		Config:      cfg,
 	}
 }
+
+////////////////////////////////////////
+// CLI COMMANDS
+////////////////////////////////////////
 
 // Init implements `gorepo init`
 func (cmd *Commands) Init(c *cli.Context) error {
@@ -743,7 +763,7 @@ func (cmd *Commands) Debug(c *cli.Context) error {
 
 // Cli runs the CLI application
 func Cli() (err error) {
-	su := NewSystemUtils(&Fs{}, &Exec{}, *NewLevelLogger(), &Os{})
+	su := NewSystemUtils(&Fs{}, &Exec{}, NewLevelLogger(), &Os{})
 	cfg, err := NewConfig(su)
 	if err != nil {
 		return err
@@ -831,7 +851,7 @@ func Cli() (err error) {
 
 // main is the entry point
 func main() {
-	su := NewSystemUtils(&Fs{}, &Exec{}, *NewLevelLogger(), &Os{})
+	su := NewSystemUtils(&Fs{}, &Exec{}, NewLevelLogger(), &Os{})
 	if err := Cli(); err != nil {
 		su.Logger.FatalLn(err.Error())
 		os.Exit(1)
