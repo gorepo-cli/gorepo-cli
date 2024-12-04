@@ -1,5 +1,22 @@
 
 
+# Roadmap & Brainstorm
+
+## New Commands
+
+- add:    to add a module
+- remove: to remove a module
+- health: to check the health of the modules (or check), with --fix
+- fmt
+- vet
+- test
+- build   (check how to set priority)
+- run     (check how to know the path + priority)
+
+## New flags
+- [executionFlags] parallel: to run the commands in parallel
+- [global]         dry-run:  to show what would be done 
+
 ### Following statements are for future work:
 
 - The CLI should allow the user to add modules from templates

@@ -752,11 +752,6 @@ func Cli() (err error) {
 			Value: false,
 			Usage: "Allow executing the scripts, even if some module don't have it",
 		},
-		&cli.IntFlag{
-			Name:  "parallel",
-			Value: 1,
-			Usage: "NOT IMPLEMENTED - Sets number of scripts to run in parallel",
-		},
 	}
 	app := &cli.App{
 		Name:  "GOREPO",
@@ -790,32 +785,9 @@ func Cli() (err error) {
 			},
 			{
 				Name:   "vet-ci",
-				Usage:  "NOT TESTED - Breaks if targeted modules have vet issues",
+				Usage:  "[experimental] Breaks if targeted modules have vet issues",
 				Action: cmd.VetCI,
 				Flags:  executionFlags,
-			},
-			{
-				Name:  "fmt",
-				Usage: "NOT IMPLEMENTED - Run 'go fmt' in targeted modules - can be overridden by a script",
-				Flags: executionFlags,
-			},
-			{
-				Name:  "vet",
-				Usage: "NOT IMPLEMENTED - Run 'go vet' in targeted modules - can be overridden by a script",
-				Flags: executionFlags,
-			},
-			{
-				Name:  "test",
-				Usage: "NOT IMPLEMENTED - Run 'go test' in targeted modules - can be overridden by a script",
-				Flags: executionFlags,
-			},
-			{
-				Name:  "build",
-				Usage: "NOT IMPLEMENTED - Run 'go build' in targeted modules - can be overridden by a script",
-			},
-			{
-				Name:  "run",
-				Usage: "NOT IMPLEMENTED - Run 'go run' in targeted modules - can be overridden by a script",
 			},
 			{
 				Name:   "version",
@@ -835,12 +807,7 @@ func Cli() (err error) {
 				Value: false,
 			},
 			&cli.BoolFlag{
-				Name:  "dry-run",
-				Value: false,
-				Usage: "NOT IMPLEMENTED - Print the commands that would be executed without executing them",
-			},
-			&cli.BoolFlag{
-				Name: "experimental",
+				Name:  "experimental",
 				Value: false,
 				Usage: "Experiment new features",
 			},
