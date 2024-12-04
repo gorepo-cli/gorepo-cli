@@ -17,7 +17,7 @@ type TestKit struct {
 	cmd        *Commands
 }
 
-func NewTestKit(wd string, files map[string][]byte) (tk TestKit, err error) {
+func NewTestKit(wd string, files map[string][]byte) (tk *TestKit, err error) {
 	mockFs := NewMockFs(files)
 	mockExec := NewMockExec()
 	mockLogger := NewMockLogger()
@@ -25,9 +25,9 @@ func NewTestKit(wd string, files map[string][]byte) (tk TestKit, err error) {
 	su := NewSystemUtils(mockFs, mockExec, &mockLogger, mockOs)
 	cfg, err := NewConfig(su)
 	if err != nil {
-		return TestKit{}, err
+		return &TestKit{}, err
 	}
-	return TestKit{
+	return &TestKit{
 		MockLogger: &mockLogger,
 		MockFs:     &mockFs,
 		MockExec:   &mockExec,
