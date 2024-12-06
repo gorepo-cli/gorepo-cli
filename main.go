@@ -465,6 +465,7 @@ func (cmd *Commands) Init(c *cli.Context) error {
 			if verbose {
 				cmd.SystemUtils.Logger.VerboseLn("go workspace already exists, no need to create one")
 			}
+			// todo: handle vendoring
 		}
 	} else if rootConfig.Strategy == "rewrite" {
 		return errors.New("rewrite strategy unsupported yet")
@@ -652,6 +653,11 @@ func (cmd *Commands) FmtCI(c *cli.Context) error {
 
 // VetCI implements `gorepo vet-ci`
 func (cmd *Commands) VetCI(c *cli.Context) error {
+	experimental := c.Bool("experimental")
+	if !experimental {
+		return errors.New("this is an experimental feature, use --experimental flag to enable it")
+	}
+
 	if exists := cmd.Config.RootConfigExists(); !exists {
 		return errors.New("monorepo not found at " + cmd.Config.Runtime.ROOT)
 	}
