@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -22,15 +23,15 @@ func NewTestKit(wd string, files map[string][]byte) (tk *TestKit, err error) {
 	mockExec := NewMockExec()
 	mockLogger := NewMockLogger()
 	mockOs := NewMockOs(wd)
-	su := NewSystemUtils(mockFs, mockExec, &mockLogger, mockOs)
+	su := NewSystemUtils(mockFs, mockExec, mockLogger, mockOs)
 	cfg, err := NewConfig(su)
 	if err != nil {
 		return &TestKit{}, err
 	}
 	return &TestKit{
-		MockLogger: &mockLogger,
-		MockFs:     &mockFs,
-		MockExec:   &mockExec,
+		MockLogger: mockLogger,
+		MockFs:     mockFs,
+		MockExec:   mockExec,
 		MockOs:     mockOs,
 		su:         su,
 		cfg:        cfg,
@@ -42,8 +43,8 @@ type MockFs struct {
 	Files map[string][]byte
 }
 
-func NewMockFs(files map[string][]byte) MockFs {
-	return MockFs{
+func NewMockFs(files map[string][]byte) *MockFs {
+	return &MockFs{
 		Files: files,
 	}
 }
@@ -116,8 +117,8 @@ type MockExec struct {
 	Commands []MockCommand
 }
 
-func NewMockExec() MockExec {
-	return MockExec{
+func NewMockExec() *MockExec {
+	return &MockExec{
 		Commands: []MockCommand{},
 	}
 }
@@ -156,8 +157,8 @@ type MockLogger struct {
 	Messages []string
 }
 
-func NewMockLogger() MockLogger {
-	return MockLogger{
+func NewMockLogger() *MockLogger {
+	return &MockLogger{
 		Messages: []string{},
 	}
 }
@@ -198,12 +199,23 @@ func (l *MockLogger) Output() []string {
 
 type MockOs struct {
 	Wd string
+	// todo: implement answers for AskBool and AskString
 }
 
-func (m MockOs) GetWd() (string, error) {
+func (m *MockOs) GetWd() (string, error) {
 	return m.Wd, nil
 }
 
 func NewMockOs(wd string) *MockOs {
 	return &MockOs{Wd: wd}
+}
+
+func (m *MockOs) AskBool(question, choices, defaultValue string, logger LlogI) (response bool, err error) {
+	// todo: implement
+	return false, errors.New("not implemented")
+}
+
+func (m *MockOs) AskString(question, choices, defaultValue string, logger LlogI) (response string, err error) {
+	// todo: implement
+	return "", errors.New("not implemented")
 }

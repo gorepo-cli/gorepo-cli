@@ -167,6 +167,8 @@ func (l *Llog) Default(msg string) {
 // OsI defines methods to interact with the operating system
 type OsI interface {
 	GetWd() (dir string, err error)
+	AskBool(question, choices, defaultValue string, logger LlogI) (response bool, err error)
+	AskString(question, choices, defaultValue string, logger LlogI) (response string, err error)
 }
 
 // Os implements OsI
@@ -177,6 +179,54 @@ var _ OsI = &Os{}
 // GetWd returns the working directory
 func (o *Os) GetWd() (dir string, err error) {
 	return os.Getwd()
+}
+
+// AskBool asks a question and returns a boolean
+func (o *Os) AskBool(question, choices, defaultValue string, logger LlogI) (response bool, err error) {
+	questionFormated := question
+	choicesFormated := ""
+	if choices != "" {
+		choicesFormated = InfoColor("(" + choices + ")")
+	}
+	defaultValueFormated := ""
+	if defaultValue != "" {
+		defaultValueFormated = VerboseColor("default: " + defaultValue)
+	}
+	logger.Default(questionFormated + " " + choicesFormated + " " + defaultValueFormated + ": ")
+	reader := bufio.NewReader(os.Stdin)
+	responseStr, err := reader.ReadString('\n')
+	if err != nil {
+		return false, err
+	}
+	responseStr = strings.TrimSpace(strings.ToLower(responseStr))
+	if responseStr == "" {
+		responseStr = defaultValue
+	}
+	return responseStr == "y" || responseStr == "yes", nil
+}
+
+// AskString asks a question and returns a string
+func (o *Os) AskString(question, choices, defaultValue string, logger LlogI) (response string, err error) {
+	questionFormated := question
+	choicesFormated := ""
+	if choices != "" {
+		choicesFormated = InfoColor("(" + choices + ")")
+	}
+	defaultValueFormated := ""
+	if defaultValue != "" {
+		defaultValueFormated = VerboseColor("default: " + defaultValue)
+	}
+	logger.Default(questionFormated + " " + choicesFormated + " " + defaultValueFormated + ": ")
+	reader := bufio.NewReader(os.Stdin)
+	responseStr, err := reader.ReadString('\n')
+	if err != nil {
+		return "", err
+	}
+	responseStr = strings.TrimSpace(responseStr)
+	if responseStr == "" {
+		responseStr = defaultValue
+	}
+	return responseStr, nil
 }
 
 // Config contains configuration of the monorepo
@@ -425,31 +475,24 @@ func (cmd *Commands) Init(c *cli.Context) error {
 
 	// ask name
 	if rootConfig.Name == "" {
-		reader := bufio.NewReader(os.Stdin)
 		defaultName := filepath.Base(cmd.Config.Runtime.ROOT)
-		cmd.SystemUtils.Logger.Default("Enter the monorepo name: " + InfoColor(fmt.Sprintf("default: ("+defaultName+")")) + " ")
-		response, err := reader.ReadString('\n')
+		nameResponse, err := cmd.SystemUtils.Os.AskString("What is the monorepo name?", "", defaultName, cmd.SystemUtils.Logger)
 		if err != nil {
 			return fmt.Errorf("failed to read input: %w", err)
 		}
-		response = strings.TrimSpace(response)
-		if response == "" {
-			response = defaultName
-		}
-		rootConfig.Name = response
+		rootConfig.Name = nameResponse
 	}
 
 	// ask strategy
 	cmd.SystemUtils.Logger.InfoLn("Using go workspace strategy by default (no other option for now)")
 
 	// ask if should vendor
-	reader := bufio.NewReader(os.Stdin)
-	cmd.SystemUtils.Logger.Default("Do you want to vendor dependencies? (y/n) " + InfoColor("default: (y)") + " ")
-	response, err := reader.ReadString('\n')
-	if err != nil {
+	if vendorResponse, err := cmd.SystemUtils.Os.AskBool(
+		"Do you want to vendor dependencies?", "y/n", "y", cmd.SystemUtils.Logger); err == nil {
+		rootConfig.Vendor = vendorResponse
+	} else {
 		return fmt.Errorf("failed to read input: %w", err)
 	}
-	rootConfig.Vendor = strings.TrimSpace(response) == "y"
 
 	// handle go workspace
 	if rootConfig.Strategy == "workspace" {
