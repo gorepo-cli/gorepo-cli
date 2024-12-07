@@ -845,10 +845,6 @@ func Cli() (err error) {
 				Action: cmd.Init,
 			},
 			{
-				Name:  "add",
-				Usage: "NOT IMPLEMENTED - Add a new module to the monorepo",
-			},
-			{
 				Name:   "list",
 				Usage:  "List all modules of the monorepo",
 				Action: cmd.List,
