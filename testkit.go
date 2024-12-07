@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+// TestKit mocks all the dependencies that interacts with the system for testing
 type TestKit struct {
 	MockLogger *MockLogger
 	MockFs     *MockFs
@@ -18,11 +19,16 @@ type TestKit struct {
 	cmd        *Commands
 }
 
-func NewTestKit(wd string, files map[string][]byte) (tk *TestKit, err error) {
+// NewTestKit creates a new TestKit
+// wd: working directory from where the command is executed
+// files: map of files with their content (pass nil if not needed)
+// qABool: map of questions and answers for boolean questions (pass nil if not needed)
+// qaString: map of questions and answers for string questions (pass nil if not needed)
+func NewTestKit(wd string, files map[string][]byte, qABool map[string]bool, qaString map[string]string) (tk *TestKit, err error) {
 	mockFs := NewMockFs(files)
 	mockExec := NewMockExec()
 	mockLogger := NewMockLogger()
-	mockOs := NewMockOs(wd)
+	mockOs := NewMockOs(wd, qABool, qaString)
 	su := NewSystemUtils(mockFs, mockExec, mockLogger, mockOs)
 	cfg, err := NewConfig(su)
 	if err != nil {
@@ -198,16 +204,21 @@ func (l *MockLogger) Output() []string {
 /////////////////////////////////////////////////////////////////
 
 type MockOs struct {
-	Wd string
-	// todo: implement answers for AskBool and AskString
+	Wd                     string
+	QuestionsAnswersBool   map[string]bool
+	QuestionsAnswersString map[string]string
+}
+
+func NewMockOs(wd string, qABool map[string]bool, qAString map[string]string) *MockOs {
+	return &MockOs{
+		Wd:                     wd,
+		QuestionsAnswersBool:   qABool,
+		QuestionsAnswersString: qAString,
+	}
 }
 
 func (m *MockOs) GetWd() (string, error) {
 	return m.Wd, nil
-}
-
-func NewMockOs(wd string) *MockOs {
-	return &MockOs{Wd: wd}
 }
 
 func (m *MockOs) AskBool(question, choices, defaultValue string, logger LlogI) (response bool, err error) {
