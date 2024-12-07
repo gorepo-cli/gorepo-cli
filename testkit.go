@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -222,11 +223,15 @@ func (m *MockOs) GetWd() (string, error) {
 }
 
 func (m *MockOs) AskBool(question, choices, defaultValue string, logger LlogI) (response bool, err error) {
-	// todo: implement
-	return false, errors.New("not implemented")
+	if answer, exists := m.QuestionsAnswersBool[question]; exists {
+		return answer, nil
+	}
+	return false, errors.New(fmt.Sprintf("question `%s` not in the test, provide an answer", question))
 }
 
 func (m *MockOs) AskString(question, choices, defaultValue string, logger LlogI) (response string, err error) {
-	// todo: implement
-	return "", errors.New("not implemented")
+	if answer, exists := m.QuestionsAnswersString[question]; exists {
+		return answer, nil
+	}
+	return "", errors.New(fmt.Sprintf("question `%s` not in the test, provide an answer", question))
 }
