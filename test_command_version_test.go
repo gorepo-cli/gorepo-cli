@@ -7,7 +7,7 @@ import (
 
 func TestCommandVersion(t *testing.T) {
 	t.Run("should return the version", func(t *testing.T) {
-		tk, err := NewTestKit("/root", nil, nil, nil)
+		tk, err := NewTestKit("some/path/root", nil, nil, nil)
 		if err != nil {
 			t.Fatal(err)
 		}

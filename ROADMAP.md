@@ -12,6 +12,7 @@
 - test
 - build   (check how to set priority)
 - run     (check how to know the path + priority)
+- tidy
 
 ## New flags
 - [executionFlags] parallel: to run the commands in parallel

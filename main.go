@@ -750,8 +750,8 @@ func (cmd *Commands) Version(c *cli.Context) error {
 	return nil
 }
 
-// Debug implements `gorepo debug`
-func (cmd *Commands) Debug(c *cli.Context) error {
+// Diagnostic implements `gorepo debug`
+func (cmd *Commands) Diagnostic(c *cli.Context) error {
 	cmd.SystemUtils.Logger.InfoLn("===================")
 	cmd.SystemUtils.Logger.InfoLn("RUNTIME_CONFIG")
 	cmd.SystemUtils.Logger.InfoLn("===================")
@@ -877,9 +877,10 @@ func Cli() (err error) {
 				Action: cmd.Version,
 			},
 			{
-				Name:   "debug",
-				Usage:  "Gives information about the configuration, for internal use and debugging",
-				Action: cmd.Debug,
+				Name:   "diagnostic",
+				Usage:  "Gives information about the configuration (mostly for internal use)",
+				Hidden: true,
+				Action: cmd.Diagnostic,
 			},
 		},
 		Flags: []cli.Flag{
